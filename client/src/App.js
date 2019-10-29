@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 
 import './App.css';
-import {Grid, Table} from "semantic-ui-react";
+import {Button, Grid, Icon, Table} from "semantic-ui-react";
 
 class App extends Component {
     state = {
         inputs: [],
         table: [],
+        answers: [],
         clues: {
             across: [],
             down: []
@@ -15,12 +16,15 @@ class App extends Component {
 
     constructor(props) {
         super(props);
+        
+        let initialAnswers = new Array(25).fill('S');
         let initialInputs = new Array(25).fill('');
 
         this.callApi()
             .then(res => this.setState({
                 table: res.table,
                 clues: res.clues,
+                answers: initialAnswers,
                 inputs: initialInputs
             }))
             .catch(err => console.log(err));
@@ -34,10 +38,77 @@ class App extends Component {
         let newInputs = this.state.inputs;
         newInputs[name] = value.toUpperCase();
 
+        this.unCheck();
+
         this.setState({
             inputs: newInputs
         });
     };
+
+    reveal() {
+
+        this.unCheck();
+
+        const {answers, inputs} = this.state;
+
+        for(let i = 0; i < 25; i++){
+            inputs[i] = answers[i];
+        }
+
+        this.setState({
+            inputs: inputs
+        });
+    }
+
+    reset() {
+
+        let initialInputs = new Array(25).fill('');
+
+        this.unCheck();
+
+        this.setState({
+            inputs: initialInputs
+        });
+    }
+
+    check() {
+
+        const {answers, inputs, table} = this.state;
+
+        let inc = 0;
+        for(let i = 0; i < 25; i++){
+            if(table[ Math.floor(i / 5) ][i % 5].color !== 'black'){
+                if(inputs[i] === answers[i]){
+                    table[ Math.floor(i / 5) ][i % 5].color = '#42b883';
+                } else {
+                    table[ Math.floor(i / 5) ][i % 5].color = '#d35656';
+                    inc++;
+                }
+            }
+        }
+
+        this.setState({
+            table: table
+        });
+
+        if(inc === 0) {
+            alert("Congratulations! You won")
+        }
+    }
+
+    unCheck() {
+        const {table} = this.state;
+
+        for(let i = 0; i < 25; i++){
+            if(table[ Math.floor(i / 5) ][i % 5].color !== 'black'){
+                    table[ Math.floor(i / 5) ][i % 5].color = 'white';
+            }
+        }
+
+        this.setState({
+            table: table
+        });
+    }
 
     callApi = async () => {
         const response = await fetch('/api/service1');
@@ -90,6 +161,7 @@ class App extends Component {
 
                                                     {col.no !== '*' ?
                                                         <input
+                                                            style={{backgroundColor: col.color}}
                                                             type="text"
                                                             className="input-text main-text"
                                                             maxLength="1"
@@ -109,6 +181,32 @@ class App extends Component {
 
                             </Table.Body>
                         </Table>
+
+                        <Button
+                            positive
+                            className="btn"
+                            onClick={ () => this.check()}
+                        >
+                            <Icon name="check"/>
+                            Check
+                        </Button>
+                        <Button
+                            primary
+                            className="btn"
+                            onClick={ () => this.reveal()}
+                        >
+                            <Icon name="eye"/>
+                            Reveal
+                        </Button>
+                        <Button
+                            color="google plus"
+                            className="btn"
+                            onClick={ () => this.reset()}
+                        >
+                            <Icon name="redo"/>
+                            Reset
+                        </Button>
+
                     </Grid.Column>
 
                     <Grid.Column width={4}>

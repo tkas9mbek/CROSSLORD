@@ -34,3 +34,8 @@
     height: 60px;
     outline: none;
 }
+
+.btn {
+    margin: 3% !important;
+    width: 27%;
+}
