@@ -84,7 +84,9 @@ class App extends Component {
 
                                                     {col.no >= '0' && col.no <= '9' ?
                                                         <label className="sub-text">{col.no}</label>
-                                                        : <br/>}
+                                                        : null}
+
+                                                    <br/>
 
                                                     {col.no !== '*' ?
                                                         <input
