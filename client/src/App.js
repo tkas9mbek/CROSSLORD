@@ -35,9 +35,9 @@ class App extends Component {
         newInputs[name] = value.toUpperCase();
 
         this.setState({
-            [name]: newInputs
+            inputs: newInputs
         });
-    }
+    };
 
     callApi = async () => {
         const response = await fetch('/api/service1');
