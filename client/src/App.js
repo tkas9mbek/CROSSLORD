@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import './App.css';
 import {Button, Grid, Icon, Table} from "semantic-ui-react";
 
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 class App extends Component {
     state = {
         inputs: [],
@@ -16,7 +18,7 @@ class App extends Component {
 
     constructor(props) {
         super(props);
-        
+
         let initialAnswers = new Array(25).fill('S');
         let initialInputs = new Array(25).fill('');
 
@@ -28,6 +30,15 @@ class App extends Component {
                 inputs: initialInputs
             }))
             .catch(err => console.log(err));
+    }
+
+    componentDidMount() {
+        const today = new Date();
+        const todayDate = months[today.getMonth()] + " " + today.getDate() + ", " + today.getFullYear();
+
+        this.setState({
+            date: todayDate
+        })
     }
 
     handleInputChange = (e) => {
@@ -47,9 +58,9 @@ class App extends Component {
 
     reveal() {
 
-        this.unCheck();
-
         const {answers, inputs} = this.state;
+
+        this.unCheck();
 
         for(let i = 0; i < 25; i++){
             inputs[i] = answers[i];
@@ -120,16 +131,16 @@ class App extends Component {
 
     render() {
 
-        const {table, clues, inputs} = this.state;
+        const {table, clues, inputs, date} = this.state;
 
         return (
             <Grid columns='equal'>
 
                 <Grid.Row>
 
-                    <Grid.Column width={5}/>
+                    <Grid.Column width={6}/>
 
-                    <Grid.Column width={6}>
+                    <Grid.Column width={4}>
                         <br/>
                         <br/>
                         <label className="header-text">
@@ -137,7 +148,7 @@ class App extends Component {
                         </label>
                     </Grid.Column>
 
-                    <Grid.Column width={5}/>
+                    <Grid.Column width={6}/>
 
                 </Grid.Row>
 
@@ -170,6 +181,7 @@ class App extends Component {
                                                             placeholder={inputs[col.index]}
                                                             value={inputs[col.index]}
                                                             onChange={  this.handleInputChange}
+                                                            onClick={ () => this.unCheck()}
                                                         />
                                                         : null}
 
@@ -206,6 +218,10 @@ class App extends Component {
                             <Icon name="redo"/>
                             Reset
                         </Button>
+
+                        <label className="date-text">
+                            {date}
+                        </label>
 
                     </Grid.Column>
 
