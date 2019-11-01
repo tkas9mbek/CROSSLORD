@@ -99,21 +99,23 @@ app.get('/api/service2', (req, res) => {
                     let start_ind = body.indexOf("<div class=\"card results-card\">");
                     let end_index = body.indexOf("</div><!-- results-card -->");
                     let clues = body.substring(start_ind, end_index);
-                    let answers = [];
-                    let tmp_ind = start_ind;
-                    while (clues.indexOf("<h1>" != -1)) {
-                        let start = body.indexOf("<h1><a href") + 14;
-                        let end = body.indexOf(">", start) - 1;
-                        let ans_uri = "https://nytimescrosswordanswers.com/" + body.substring(start, end);
-                        request({uri: ans_uri},
+                    let answer_uris = [];
+                    while (clues.indexOf("<h1>") !== -1) {
+                        let start = clues.indexOf("<h1><a href") + 14;
+                        let end = clues.indexOf(">", start) - 1;
+                        let ans_uri = "https://nytimescrosswordanswers.com/" + clues.substring(start, end);
+                        answer_uris.push(ans_uri);
+                        /*request({uri: ans_uri},
                             (error, response, body) => {
                                 let start_ind = body.indexOf("clue", body.indexOf("<p><strong>")) + 6;
                                 let end_ind = body.indexOf("</a>", start_ind);
                                 let clue = body.substring(start_ind, end_ind);
-                                res.send({ans_uri});
+                                res.send({clue});
                             }
-                        );
+                        );*/
+                        clues = clues.substring(end);
                     }
+                    res.send({answer_uris});
                 }
             );
         }
