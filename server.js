@@ -145,15 +145,25 @@ app.get('/api/service2', (req, res) => {
                                     }
                                 );
 
+                                console.log({
+                                    clue: clue,
+                                    ans: ans
+                                })
+
                             });
+
                     }
 
-                    console.log(answers);
+                    await setTimeout(function(){
 
-                    res.send({
-                        answers: answers,
-                    });
+                        console.log(answers);
+                        console.log(req.query.time);
 
+                        res.send({
+                            answers: answers,
+                        });
+
+                        }, req.query.time + 1000);
                 });
         });
 });

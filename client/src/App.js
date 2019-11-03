@@ -1,35 +1,137 @@
 import React, { Component } from 'react';
 
 import './App.css';
-import {Button, Grid, Icon, Table} from "semantic-ui-react";
+import {Button, Dimmer, Grid, Icon, Image, Loader, Segment, Table} from "semantic-ui-react";
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 class App extends Component {
     state = {
         inputs: [],
+        message: "Preparing the CROSSLORD",
         table: [],
         answers: [],
+        loader: true,
         clues: {
             across: [],
             down: []
-        }
+        },
+        loading: true
     };
 
     constructor(props) {
         super(props);
 
-        let initialAnswers = new Array(25).fill('S');
         let initialInputs = new Array(25).fill('');
 
-        this.callApi()
+        this.callApi('/api/service1')
             .then(res => this.setState({
                 table: res.table,
                 clues: res.clues,
-                answers: initialAnswers,
                 inputs: initialInputs
             }))
             .catch(err => console.log(err));
+
+        this.callApi('/api/service2?time=6000')
+            .then(res =>{
+                    if(res.answers.length < 5){
+
+                        // long time request
+                        this.setState({
+                            message: "No result returned in 6 seconds. Resending request with 15 seconds time-limit."
+                        });
+
+                        this.callApi('/api/service2?time=12000')
+                            .then(res =>{
+                                        this.buildAnswers(res.answers);
+                                }
+                            )
+                            .catch(err => console.log(err));
+
+                    } else {
+                        this.buildAnswers(res.answers);
+                    }
+                }
+            )
+            .catch(err => console.log(err));
+    }
+
+
+    normalizeString(string) {
+        for(let i = 0; i < string.length; i++){
+            string = string.replace('"', '').replace(',', '');
+        }
+        return string;
+    }
+
+    buildAnswers( answers) {
+
+        if(answers.length < 5){
+            this.setState({
+                message: "No result returned in 15 seconds. Please check internet connection and whether https://nytimescrosswordanswers.com/ is working!"
+            });
+
+            return;
+        }
+
+        const {clues, table} = this.state;
+
+        let tableAnswers = [];
+        let across = [];
+        let down = [];
+
+        let acrossKeys = Object.keys(clues.across);
+        let downKeys = Object.keys(clues.down);
+
+        for( let i = 0; i < acrossKeys.length; i++){
+            across.push(acrossKeys[i], this.normalizeString(clues.across[acrossKeys[i]]) );
+        }
+
+        for( let i = 0; i < downKeys.length; i++){
+            down.push(downKeys[i], this.normalizeString(clues.down[downKeys[i]]) );
+        }
+
+        console.log(down);
+        console.log(across);
+
+        for( let i = 0; i < answers.length; i++){
+            if(down.includes( answers[i].clue)){
+                down[ down.findIndex(element => element === answers[i].clue) ] = answers[i].ans;
+            }
+            if(across.includes( answers[i].clue)){
+                across[ across.findIndex(element => element === answers[i].clue)] = answers[i].ans;
+            }
+        }
+
+        console.log(down);
+        console.log(across);
+
+        for( let i = 0; i < table.length; i++){
+            for( let j = 0; j < table[i].length; j++) {
+                if (table[i][j].no !== '') {
+
+                    if (down.includes(table[i][j].no)) {
+                        let word = down[down.findIndex(element => element === table[i][j].no) + 1];
+                        for (let k = 0; k < word.length; k++) {
+                            tableAnswers[table[i][j].index + k * 5] = word.charAt(k);
+                        }
+                    }
+
+                    if (across.includes(table[i][j].no)) {
+                        let word = across[across.findIndex(element => element === table[i][j].no) + 1];
+                        for (let k = 0; k < word.length; k++) {
+                            tableAnswers[table[i][j].index + k] = word.charAt(k);
+                        }
+                    }
+                }
+            }
+        }
+
+        this.setState({
+            answers: tableAnswers,
+            loading: false
+        })
+
     }
 
     componentDidMount() {
@@ -112,7 +214,7 @@ class App extends Component {
 
         for(let i = 0; i < 25; i++){
             if(table[ Math.floor(i / 5) ][i % 5].color !== 'black'){
-                    table[ Math.floor(i / 5) ][i % 5].color = 'white';
+                table[ Math.floor(i / 5) ][i % 5].color = 'white';
             }
         }
 
@@ -121,8 +223,8 @@ class App extends Component {
         });
     }
 
-    callApi = async () => {
-        const response = await fetch('/api/service1');
+    callApi = async (uri) => {
+        const response = await fetch(uri);
         const body = await response.json();
         if (response.status !== 200) throw Error(body.message);
 
@@ -131,149 +233,166 @@ class App extends Component {
 
     render() {
 
-        const {table, clues, inputs, date} = this.state;
+        const {table, clues, inputs, date, loading, message} = this.state;
 
-        return (
-            <Grid columns='equal'>
+        if (loading) {
+            return (
+                <Segment>
 
-                <Grid.Row>
-                    <Grid.Column width={1}/>
+                    <Dimmer active>
+                        <Loader className="header-text" indeterminate >{message}</Loader>
+                    </Dimmer>
 
-                    <Grid.Column width={6}>
-                        <Table celled columns={5}>
-                            <Table.Body>
+                    <Image
+                        src='http://core360.com.br/shop/skin/frontend/base/default/lib/jlukic_semanticui/examples/assets/images/wireframe/paragraph.png'
+                        style={{width: 720, height: 480}}
+                    />
+                </Segment>
+            )
+        } else {
+            return (
+                <Grid columns='equal'>
 
-                                {table.map(row => (
-                                        <Table.Row>
-                                            {row.map( col => (
-                                                <Table.Cell className="square-cell" style={{backgroundColor: col.color}}>
+                    <Grid.Row>
+                        <Grid.Column width={1}/>
 
-                                                    {col.no >= '0' && col.no <= '9' ?
-                                                        <label className="sub-text">{col.no}</label>
-                                                        : null}
+                        <Grid.Column width={6}>
+                            <Table celled columns={5}>
+                                <Table.Body>
 
-                                                    <br/>
+                                    {table.map(row => (
+                                            <Table.Row>
+                                                {row.map(col => (
+                                                    <Table.Cell className="square-cell"
+                                                                style={{backgroundColor: col.color}}>
 
-                                                    {col.no !== '*' ?
-                                                        <input
-                                                            style={{backgroundColor: col.color}}
-                                                            type="text"
-                                                            className="input-text main-text"
-                                                            maxLength="1"
-                                                            autoCapitalize={true}
-                                                            name={col.index}
-                                                            placeholder={inputs[col.index]}
-                                                            value={inputs[col.index]}
-                                                            onChange={  this.handleInputChange}
-                                                            onClick={ () => this.unCheck()}
-                                                        />
-                                                        : null}
+                                                        {col.no >= '0' && col.no <= '9' ?
+                                                            <label className="sub-text">{col.no}</label>
+                                                            : null}
 
+                                                        <br/>
+
+                                                        {col.no !== '*' ?
+                                                            <input
+                                                                style={{backgroundColor: col.color}}
+                                                                type="text"
+                                                                className="input-text main-text"
+                                                                maxLength="1"
+                                                                autoCapitalize={true}
+                                                                name={col.index}
+                                                                placeholder={inputs[col.index]}
+                                                                value={inputs[col.index]}
+                                                                onChange={this.handleInputChange}
+                                                                onClick={() => this.unCheck()}
+                                                            />
+                                                            : null}
+
+                                                    </Table.Cell>
+                                                ))}
+                                            </Table.Row>
+                                        )
+                                    )}
+
+                                </Table.Body>
+                            </Table>
+
+                            <Button
+                                positive
+                                className="btn"
+                                onClick={() => this.check()}
+                            >
+                                <Icon name="check"/>
+                                Check
+                            </Button>
+                            <Button
+                                primary
+                                className="btn"
+                                onClick={() => this.reveal()}
+                            >
+                                <Icon name="eye"/>
+                                Reveal
+                            </Button>
+                            <Button
+                                color="google plus"
+                                className="btn"
+                                onClick={() => this.reset()}
+                            >
+                                <Icon name="redo"/>
+                                Reset
+                            </Button>
+
+                            <br/>
+
+                            <label className="date-text">
+                                {date}
+                            </label>
+
+                            <br/>
+                            <br/>
+
+                            <label className="header-text">
+                                CROSSLORD
+                            </label>
+
+                        </Grid.Column>
+
+                        <Grid.Column width={4}>
+
+                            <Table key='black' className="borderless">
+
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.HeaderCell colSpan='3'>Across</Table.HeaderCell>
+                                    </Table.Row>
+                                </Table.Header>
+
+                                <Table.Body>
+                                    {Object.keys(clues.across).map(datum =>
+                                        (
+                                            <Table.Row>
+                                                <Table.Cell>
+                                                    {datum + ". " + clues.across[datum]}
                                                 </Table.Cell>
-                                            ))}
-                                        </Table.Row>
-                                    )
-                                )}
+                                            </Table.Row>
+                                        )
+                                    )}
+                                </Table.Body>
+                            </Table>
 
-                            </Table.Body>
-                        </Table>
+                        </Grid.Column>
 
-                        <Button
-                            positive
-                            className="btn"
-                            onClick={ () => this.check()}
-                        >
-                            <Icon name="check"/>
-                            Check
-                        </Button>
-                        <Button
-                            primary
-                            className="btn"
-                            onClick={ () => this.reveal()}
-                        >
-                            <Icon name="eye"/>
-                            Reveal
-                        </Button>
-                        <Button
-                            color="google plus"
-                            className="btn"
-                            onClick={ () => this.reset()}
-                        >
-                            <Icon name="redo"/>
-                            Reset
-                        </Button>
+                        <Grid.Column width={4}>
 
-                        <br/>
+                            <Table key='black' className="borderless">
 
-                        <label className="date-text">
-                            {date}
-                        </label>
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.HeaderCell colSpan='3'>Down</Table.HeaderCell>
+                                    </Table.Row>
+                                </Table.Header>
 
-                        <br/>
-                        <br/>
+                                <Table.Body>
+                                    {Object.keys(clues.down).map(datum =>
+                                        (
+                                            <Table.Row>
+                                                <Table.Cell>
+                                                    {datum + ".  " + clues.down[datum]}
+                                                </Table.Cell>
+                                            </Table.Row>
+                                        )
+                                    )}
+                                </Table.Body>
+                            </Table>
 
-                        <label className="header-text">
-                            CROSSLORD
-                        </label>
+                        </Grid.Column>
 
-                    </Grid.Column>
+                        <Grid.Column width={1}/>
 
-                    <Grid.Column width={4}>
+                    </Grid.Row>
 
-                        <Table key='black' className="borderless">
-
-                            <Table.Header>
-                                <Table.Row  >
-                                    <Table.HeaderCell colSpan='3'>Across</Table.HeaderCell>
-                                </Table.Row>
-                            </Table.Header>
-
-                            <Table.Body>
-                                {Object.keys(clues.across).map( datum =>
-                                    (
-                                        <Table.Row>
-                                            <Table.Cell>
-                                                {datum + ". " + clues.across[datum]}
-                                            </Table.Cell>
-                                        </Table.Row>
-                                    )
-                                )}
-                            </Table.Body>
-                        </Table>
-
-                    </Grid.Column>
-
-                    <Grid.Column width={4}>
-
-                        <Table key='black' className="borderless">
-
-                            <Table.Header>
-                                <Table.Row  >
-                                    <Table.HeaderCell colSpan='3'>Down</Table.HeaderCell>
-                                </Table.Row>
-                            </Table.Header>
-
-                            <Table.Body>
-                                {Object.keys(clues.down).map( datum =>
-                                    (
-                                        <Table.Row>
-                                            <Table.Cell>
-                                                {datum + ".  " + clues.down[datum]}
-                                            </Table.Cell>
-                                        </Table.Row>
-                                    )
-                                )}
-                            </Table.Body>
-                        </Table>
-
-                    </Grid.Column>
-
-                    <Grid.Column width={1}/>
-
-                </Grid.Row>
-
-            </Grid>
-        );
+                </Grid>
+            );
+        }
     }
 }
 
