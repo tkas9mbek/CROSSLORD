@@ -89,38 +89,73 @@ app.get('/api/service1', (req, res) => {
 });
 
 app.get('/api/service2', (req, res) => {
+
     request({uri: "https://nytimescrosswordanswers.com/new-york-times-the-mini-crossword-answers"},
         (error, response, body) => {
+
             let start_ind = body.indexOf("<h1><a href=\"") + 14;
             let end_ind = body.indexOf(">", start_ind) - 1;
             let today_uri = "https://nytimescrosswordanswers.com/" + body.substring(start_ind, end_ind);
+
+            let answers = [];
+
             request({uri: today_uri},
-                (error, response, body) => {
+                async (error, response, body) => {
+
                     let start_ind = body.indexOf("<div class=\"card results-card\">");
                     let end_index = body.indexOf("</div><!-- results-card -->");
-                    let clues = body.substring(start_ind, end_index);
-                    let answer_uris = [];
-                    while (clues.indexOf("<h1>") !== -1) {
-                        let start = clues.indexOf("<h1><a href") + 14;
-                        let end = clues.indexOf(">", start) - 1;
-                        let ans_uri = "https://nytimescrosswordanswers.com/" + clues.substring(start, end);
-                        answer_uris.push(ans_uri);
-                        /*request({uri: ans_uri},
-                            (error, response, body) => {
-                                let start_ind = body.indexOf("clue", body.indexOf("<p><strong>")) + 6;
-                                let end_ind = body.indexOf("</a>", start_ind);
-                                let clue = body.substring(start_ind, end_ind);
-                                res.send({clue});
-                            }
-                        );*/
-                        clues = clues.substring(end);
+                    let clues_uri = body.substring(start_ind, end_index);
+
+                    let start = 0;
+
+                    while (clues_uri.indexOf("<h1><a href=", start) !== -1) {
+
+                        start = clues_uri.indexOf("<h1><a href", start) + 14;
+                        let end = clues_uri.indexOf(">", start) - 1;
+                        let ans_uri = "https://nytimescrosswordanswers.com/" + clues_uri.substring(start, end);
+
+                        await request({uri: ans_uri},
+                             (error, response, body) => {
+
+                                const clue = body.substring(
+                                    body.indexOf(">", body.indexOf("<strong><a href=") + 16) + 1,
+                                    body.indexOf("</a></strong>")
+                                );
+
+                                let ans = "";
+
+                                const possibleAns = body.substring(
+                                    body.indexOf("<h2>Possible Answer</h2>"),
+                                    body.indexOf("<br>", body.indexOf("<h2>Possible Answer</h2>"))
+                                );
+
+                                let spanStart = 0;
+
+                                while (possibleAns.indexOf("<span class=\"l\">", spanStart) !== -1) {
+                                    spanStart = possibleAns.indexOf("<span class=\"l\">", spanStart) + 16;
+                                    ans = ans + possibleAns.substring(
+                                        spanStart,
+                                        possibleAns.indexOf("</span>", spanStart)
+                                    );
+                                }
+
+                                answers.push({
+                                        clue: clue,
+                                        ans: ans
+                                    }
+                                );
+
+                            });
                     }
-                    res.send({answer_uris});
-                }
-            );
-        }
-    );
-    //res.send({answers: [{}, {},]});
+
+                    console.log(answers);
+
+                    res.send({
+                        answers: answers,
+                    });
+
+                });
+        });
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -131,4 +166,5 @@ if (process.env.NODE_ENV === 'production') {
         res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
     });
 }
+
 app.listen(port, () => console.log(`listening on port ${port}`));

@@ -137,22 +137,6 @@ class App extends Component {
             <Grid columns='equal'>
 
                 <Grid.Row>
-
-                    <Grid.Column width={6}/>
-
-                    <Grid.Column width={4}>
-                        <br/>
-                        <br/>
-                        <label className="header-text">
-                            CROSSLORD
-                        </label>
-                    </Grid.Column>
-
-                    <Grid.Column width={6}/>
-
-                </Grid.Row>
-
-                <Grid.Row>
                     <Grid.Column width={1}/>
 
                     <Grid.Column width={6}>
@@ -219,8 +203,17 @@ class App extends Component {
                             Reset
                         </Button>
 
+                        <br/>
+
                         <label className="date-text">
                             {date}
+                        </label>
+
+                        <br/>
+                        <br/>
+
+                        <label className="header-text">
+                            CROSSLORD
                         </label>
 
                     </Grid.Column>
