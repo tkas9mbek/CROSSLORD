@@ -163,7 +163,7 @@ app.get('/api/service2', (req, res) => {
                             answers: answers,
                         });
 
-                        }, req.query.time + 1000);
+                        }, req.query.time);
                 });
         });
 });

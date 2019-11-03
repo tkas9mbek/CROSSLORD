@@ -32,7 +32,7 @@ class App extends Component {
             }))
             .catch(err => console.log(err));
 
-        this.callApi('/api/service2?time=6000')
+        this.callApi('/api/service2?time=7000')
             .then(res =>{
                     if(res.answers.length < 5){
 
@@ -41,7 +41,7 @@ class App extends Component {
                             message: "No result returned in 6 seconds. Resending request with 15 seconds time-limit."
                         });
 
-                        this.callApi('/api/service2?time=12000')
+                        this.callApi('/api/service2?time=16000')
                             .then(res =>{
                                         this.buildAnswers(res.answers);
                                 }
