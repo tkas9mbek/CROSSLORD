@@ -16,6 +16,7 @@ class App extends Component {
             across: [],
             down: []
         },
+        cluesSize: 5,
         loading: true
     };
 
@@ -28,22 +29,23 @@ class App extends Component {
             .then(res => this.setState({
                 table: res.table,
                 clues: res.clues,
-                inputs: initialInputs
+                inputs: initialInputs,
+                cluesSize: Object.keys(res.clues.across).length + Object.keys(res.clues.down).length
             }))
             .catch(err => console.log(err));
 
-        this.callApi('/api/service2?time=7000')
+        this.callApi('/api/service2?time=5000')
             .then(res =>{
-                    if(res.answers.length < 5){
+                    if(res.answers.length < this.state.cluesSize){
 
                         // long time request
                         this.setState({
-                            message: "No result returned in 6 seconds. Resending request with 15 seconds time-limit."
+                            message: "No result returned in 5 seconds. Resending request with 18 seconds time-limit."
                         });
 
-                        this.callApi('/api/service2?time=16000')
+                        this.callApi('/api/service2?time=18000')
                             .then(res =>{
-                                        this.buildAnswers(res.answers);
+                                    this.buildAnswers(res.answers);
                                 }
                             )
                             .catch(err => console.log(err));
@@ -66,7 +68,7 @@ class App extends Component {
 
     buildAnswers( answers) {
 
-        if(answers.length < 5){
+        if (answers.length < this.state.cluesSize) {
             this.setState({
                 message: "No result returned in 15 seconds. Please check internet connection and whether https://nytimescrosswordanswers.com/ is working!"
             });
@@ -76,56 +78,75 @@ class App extends Component {
 
         const {clues, table} = this.state;
 
-        let tableAnswers = [];
+        let tableAnswers = new Array(25).fill('');
         let across = [];
         let down = [];
 
         let acrossKeys = Object.keys(clues.across);
         let downKeys = Object.keys(clues.down);
 
-        for( let i = 0; i < acrossKeys.length; i++){
-            across.push(acrossKeys[i], this.normalizeString(clues.across[acrossKeys[i]]) );
+        for (let i = 0; i < acrossKeys.length; i++) {
+            across.push(acrossKeys[i], this.normalizeString(clues.across[acrossKeys[i]]));
         }
 
-        for( let i = 0; i < downKeys.length; i++){
-            down.push(downKeys[i], this.normalizeString(clues.down[downKeys[i]]) );
-        }
-
-        console.log(down);
-        console.log(across);
-
-        for( let i = 0; i < answers.length; i++){
-            if(down.includes( answers[i].clue)){
-                down[ down.findIndex(element => element === answers[i].clue) ] = answers[i].ans;
-            }
-            if(across.includes( answers[i].clue)){
-                across[ across.findIndex(element => element === answers[i].clue)] = answers[i].ans;
-            }
+        for (let i = 0; i < downKeys.length; i++) {
+            down.push(downKeys[i], this.normalizeString(clues.down[downKeys[i]]));
         }
 
         console.log(down);
         console.log(across);
 
-        for( let i = 0; i < table.length; i++){
-            for( let j = 0; j < table[i].length; j++) {
+        for (let i = 0; i < answers.length; i++) {
+            if (down.includes(answers[i].clue)) {
+                down[down.findIndex(element => element === answers[i].clue)] = answers[i].ans;
+            }
+            if (across.includes(answers[i].clue)) {
+                across[across.findIndex(element => element === answers[i].clue)] = answers[i].ans;
+            }
+        }
+
+        console.log(down);
+        console.log(across);
+
+        for (let i = 0; i < table.length; i++) {
+            for (let j = 0; j < table[i].length; j++) {
                 if (table[i][j].no !== '') {
 
                     if (down.includes(table[i][j].no)) {
                         let word = down[down.findIndex(element => element === table[i][j].no) + 1];
                         for (let k = 0; k < word.length; k++) {
-                            tableAnswers[table[i][j].index + k * 5] = word.charAt(k);
+
+                            if (tableAnswers[table[i][j].index + k * 5] === '') {
+                                tableAnswers[table[i][j].index + k * 5] = word.charAt(k);
+                            }
+
                         }
                     }
+
+                }
+            }
+        }
+
+
+        for (let i = 0; i < table.length; i++) {
+            for (let j = 0; j < table[i].length; j++) {
+                if (table[i][j].no !== '') {
 
                     if (across.includes(table[i][j].no)) {
                         let word = across[across.findIndex(element => element === table[i][j].no) + 1];
                         for (let k = 0; k < word.length; k++) {
-                            tableAnswers[table[i][j].index + k] = word.charAt(k);
+
+                            if (tableAnswers[table[i][j].index + k * 5] === '') {
+                                tableAnswers[table[i][j].index + k * 5] = word.charAt(k);
+                            }
+
                         }
                     }
+
                 }
             }
         }
+
 
         this.setState({
             answers: tableAnswers,
