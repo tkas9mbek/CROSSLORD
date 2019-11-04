@@ -25,7 +25,7 @@ class App extends Component {
 
         let initialInputs = new Array(25).fill('');
 
-        this.callApi('/api/service1')
+        this.callApi('/api/service1?time')
             .then(res => this.setState({
                 table: res.table,
                 clues: res.clues,
@@ -36,6 +36,7 @@ class App extends Component {
 
         this.callApi('/api/service2?time=5000')
             .then(res =>{
+
                     if(res.answers.length < this.state.cluesSize){
 
                         // long time request
@@ -93,8 +94,8 @@ class App extends Component {
             down.push(downKeys[i], this.normalizeString(clues.down[downKeys[i]]));
         }
 
-        console.log(down);
-        console.log(across);
+        // console.log(down);
+        // console.log(across);
 
         for (let i = 0; i < answers.length; i++) {
             if (down.includes(answers[i].clue)) {
@@ -226,7 +227,9 @@ class App extends Component {
         });
 
         if(inc === 0) {
-            alert("Congratulations! You won")
+            setTimeout(function(){
+                alert("Congratulations! You won")
+            }, 750);
         }
     }
 
@@ -261,7 +264,7 @@ class App extends Component {
                 <Segment>
 
                     <Dimmer active>
-                        <Loader className="header-text" indeterminate >{message}</Loader>
+                        <Loader indeterminate >{message}</Loader>
                     </Dimmer>
 
                     <Image
@@ -274,7 +277,7 @@ class App extends Component {
             return (
                 <Grid columns='equal'>
 
-                    <Grid.Row>
+                    <Grid.Row style={{marginTop: 25}}>
                         <Grid.Column width={1}/>
 
                         <Grid.Column width={6}>
@@ -342,14 +345,13 @@ class App extends Component {
                                 Reset
                             </Button>
 
-                            <br/>
+                            <br/><br/>
 
                             <label className="date-text">
                                 {date}
                             </label>
 
-                            <br/>
-                            <br/>
+                            <br/><br/>
 
                             <label className="header-text">
                                 CROSSLORD
