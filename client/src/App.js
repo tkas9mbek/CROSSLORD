@@ -62,7 +62,7 @@ class App extends Component {
 
     normalizeString(string) {
         for(let i = 0; i < string.length; i++){
-            string = string.replace('"', '').replace(',', '');
+            string = string.replace('"', '').replace(',', '').replace("'", '');
         }
         return string;
     }
@@ -229,7 +229,7 @@ class App extends Component {
         if(inc === 0) {
             setTimeout(function(){
                 alert("Congratulations! You won")
-            }, 750);
+            }, 450);
         }
     }
 
