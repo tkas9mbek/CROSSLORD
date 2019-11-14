@@ -35,40 +35,44 @@ class App extends Component {
         let newMsg = this.state.message;
 
         this.callApi('/api/service1?time')
-            .then(res => this.setState({
-                message: newMsg.splice(1, 1),
-                table: res.table,
-                clues: res.clues,
-                inputs: initialInputs,
-                cluesSize: Object.keys(res.clues.across).length + Object.keys(res.clues.down).length
-            }))
+            .then(res => {
+                this.setState({
+                    message: newMsg.splice(1, 1),
+                    table: res.table,
+                    clues: res.clues,
+                    inputs: initialInputs,
+                    cluesSize: Object.keys(res.clues.across).length + Object.keys(res.clues.down).length
+                });
+
+                this.callApi('/api/service2?time=5000')
+                    .then(res =>{
+
+                            if(res.answers.length < this.state.cluesSize){
+
+                                newMsg[1].content = "No result returned in 5 seconds. Resending request with 18 seconds time-limit.";
+
+                                // long time request
+                                this.setState({
+                                    message: newMsg
+                                });
+
+                                this.callApi('/api/service2?time=18000')
+                                    .then(res =>{
+                                            this.buildAnswers(res.answers);
+                                        }
+                                    )
+                                    .catch(err => console.log(err));
+
+                            } else {
+                                this.buildAnswers(res.answers);
+                            }
+                        }
+                    )
+                    .catch(err => console.log(err));
+
+            })
             .catch(err => console.log(err));
 
-        this.callApi('/api/service2?time=5000')
-            .then(res =>{
-
-                    if(res.answers.length < this.state.cluesSize){
-
-                        newMsg[0].content = "No result returned in 5 seconds. Resending request with 18 seconds time-limit.";
-
-                        // long time request
-                        this.setState({
-                            message: newMsg
-                        });
-
-                        this.callApi('/api/service2?time=18000')
-                            .then(res =>{
-                                    this.buildAnswers(res.answers);
-                                }
-                            )
-                            .catch(err => console.log(err));
-
-                    } else {
-                        this.buildAnswers(res.answers);
-                    }
-                }
-            )
-            .catch(err => console.log(err));
     }
 
 
@@ -79,13 +83,13 @@ class App extends Component {
         return string;
     }
 
-    buildAnswers( answers) {
+    async buildAnswers( answers) {
 
         const {clues, table, message} = this.state;
 
         if (answers.length < this.state.cluesSize) {
 
-            message[0].content = "No result returned in 15 seconds. Please check internet connection and" +
+            message[1].content = "No result returned in 15 seconds. Please check internet connection and" +
                 " whether https://nytimescrosswordanswers.com/ is working!"
 
             this.setState({
@@ -110,9 +114,6 @@ class App extends Component {
             down.push(downKeys[i], this.normalizeString(clues.down[downKeys[i]]));
         }
 
-        // console.log(down);
-        // console.log(across);
-
         for (let i = 0; i < answers.length; i++) {
             if (down.includes(answers[i].clue)) {
                 down[down.findIndex(element => element === answers[i].clue)] = answers[i].ans;
@@ -121,9 +122,6 @@ class App extends Component {
                 across[across.findIndex(element => element === answers[i].clue)] = answers[i].ans;
             }
         }
-
-        console.log(down);
-        console.log(across);
 
         for (let i = 0; i < table.length; i++) {
             for (let j = 0; j < table[i].length; j++) {
@@ -166,13 +164,101 @@ class App extends Component {
 
         message.splice(0, 1);
 
+        for (let i = 0; i < down.length / 2; i++) {
+            down[i] = down[2 * i] + ". " + down[2 * i + 1];
+        }
+        down.length = down.length / 2;
+
+        for (let i = 0; i < across.length / 2; i++) {
+            across[i] = across[2 * i] + ". " + across[2 * i + 1];
+        }
+        across.length = across.length / 2;
+
         this.setState({
             inputs: tableAnswers,
             downAns: down,
             acrossAns: across,
             message: message
-        })
+        });
 
+        this.generateClues(down, "downAns", message);
+        this.generateClues(across, "acrossAns", message);
+    }
+
+    generateClues(down, side, message) {
+
+        let newDownClues = [];
+
+        for (let i = 0; i < down.length; i++) {
+
+            const element = down[i];
+            const answer = element.substr(3);
+            let maxRank = -1;
+            let newClue = element;
+
+            message.push({
+                header: "Generating new clue for : " + answer,
+                content: "Searching Youtube.com"
+            });
+
+            this.setState({
+                message: message
+            });
+
+            this.callApi('/api/youtube?ans=' + answer)
+                .then(res =>{
+                        if(res.rank > maxRank) {
+                            maxRank = res.rank;
+                            newClue = element.substr(0, 3) + res.clue;
+                        }
+                        message[i].content = "Searching UrbanDictionary.com";
+                        this.setState({
+                            message: message
+                        });
+                        this.callApi('/api/urban?ans=' + answer)
+                            .then(res =>{
+                                    if(res.rank > maxRank) {
+                                        maxRank = res.rank;
+                                        newClue = element.substr(0, 3) + res.clue;
+                                    }
+                                    message[i].content = "Searching Dictionary.com";
+                                    this.setState({
+                                        message: message
+                                    });
+                                    this.callApi('/api/dictionary?ans=' + answer)
+                                        .then(res =>{
+                                                if(res.rank > maxRank) {
+                                                    maxRank = res.rank;
+                                                    newClue = element.substr(0, 3) + res.clue;
+                                                }
+                                                message[i].content = "Searching Merriam-Webster's Learner's Dictionary";
+                                                this.setState({
+                                                    message: message
+                                                });
+                                                this.callApi('/api/merriam?ans=' + answer)
+                                                    .then(res =>{
+                                                            if(res.rank > maxRank) {
+                                                                maxRank = res.rank;
+                                                                newClue = element.substr(0, 3) + res.clue;
+                                                            }
+
+                                                            newDownClues[element.substr(0, 1)] =
+                                                                newClue.substr(0,4).toUpperCase() + newClue.substr(4);
+                                                            message.splice(0, 1);
+
+                                                            this.setState({
+                                                                [side]: newDownClues,
+                                                                message: message
+                                                            });
+                                                        }
+                                                    ).catch(err => console.log(err));
+                                            }
+                                        ).catch(err => console.log(err));
+                                }
+                            ).catch(err => console.log(err));
+                    }
+                ).catch(err => console.log(err));
+        }
     }
 
     componentDidMount() {
@@ -208,7 +294,7 @@ class App extends Component {
 
     render() {
 
-        const {table, clues, inputs, date, message} = this.state;
+        const {table, clues, inputs, date, message,  downAns, acrossAns} = this.state;
 
         return (
             <Grid columns='equal'>
@@ -232,14 +318,14 @@ class App extends Component {
                 <Grid.Row>
 
                     <Grid.Column width={7}>
-                        <Table celled padded style={{width: 500, height: 500, marginLeft: 50}}>
+                        <Table celled padded className="square-table">
                             <Table.Body>
 
                                 {table.map(row => (
                                         <Table.Row>
                                             {row.map(col => (
-                                                <Table.Cell
-                                                    style={{backgroundColor: col.color}}>
+                                                <Table.Cell className="inner-cell"
+                                                            style={{backgroundColor: col.color}}>
 
                                                     {col.no >= '0' && col.no <= '9' ?
                                                         <label className="sub-text">{col.no}</label>
@@ -251,7 +337,7 @@ class App extends Component {
                                                         <input
                                                             style={{backgroundColor: col.color}}
                                                             type="text"
-                                                            className="input-text main-text"
+                                                            className="input-bar main-text"
                                                             maxLength="1"
                                                             autoCapitalize={true}
                                                             name={col.index}
@@ -288,13 +374,13 @@ class App extends Component {
 
                         <Table key='black' className="borderless">
 
-                            <Table.Header>
+                            <Table.Header className="clue-header">
                                 <Table.Row>
                                     <Table.HeaderCell colSpan='3'>Across</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 
-                            <Table.Body>
+                            <Table.Body className="clue-text">
                                 {Object.keys(clues.across).map(datum =>
                                     (
                                         <Table.Row>
@@ -307,19 +393,38 @@ class App extends Component {
                             </Table.Body>
                         </Table>
 
+                        <Table key='black' className="borderless">
+
+                            <Table.Header className="clue-header">
+                                <Table.Row>
+                                    <Table.HeaderCell colSpan='3'>New Across Clues</Table.HeaderCell>
+                                </Table.Row>
+                            </Table.Header>
+
+                            <Table.Body className="clue-text">
+                                {acrossAns.map(datum =>
+                                    <Table.Row>
+                                        <Table.Cell>
+                                            {datum}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                )}
+                            </Table.Body>
+                        </Table>
+
                     </Grid.Column>
 
                     <Grid.Column width={4}>
 
                         <Table key='black' className="borderless">
 
-                            <Table.Header>
+                            <Table.Header className="clue-header">
                                 <Table.Row>
                                     <Table.HeaderCell colSpan='3'>Down</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 
-                            <Table.Body>
+                            <Table.Body className="clue-text">
                                 {Object.keys(clues.down).map(datum =>
                                     (
                                         <Table.Row>
@@ -329,6 +434,25 @@ class App extends Component {
                                         </Table.Row>
                                     )
                                 )}
+                            </Table.Body>
+                        </Table>
+
+                        <Table key='black' className="borderless">
+
+                            <Table.Header className="clue-header">
+                                <Table.Row>
+                                    <Table.HeaderCell colSpan='3'>New Down Clues</Table.HeaderCell>
+                                </Table.Row>
+                            </Table.Header>
+
+                            <Table.Body className="clue-text">
+                                {downAns.map(datum => (
+                                    <Table.Row>
+                                        <Table.Cell>
+                                            {datum}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))}
                             </Table.Body>
                         </Table>
 

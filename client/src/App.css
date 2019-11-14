@@ -1,11 +1,39 @@
 .sub-text {
+    font-family: "Comic Sans MS", cursive, sans-serif;
     margin-top: 3px;
     margin-left: 3px;
-    font-size: 12px;
+    font-size: 20px;
+    font-weight: bold;
     color: grey;
 }
 
+.square-table {
+    width: 525px !important;
+    height: 525px!important;
+    margin-left: 8% !important;
+    border: 2px solid #0d71bb !important;
+}
+
+.inner-cell {
+    border: 1px solid #0d71bb !important;
+}
+
+.clue-text {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    line-height: 21px;
+    font-size: 15px;
+    color: #0d71bb;
+    font-weight: 600;
+}
+
+.clue-header {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+}
+
 .date-text {
+    font-family: "Comic Sans MS", cursive, sans-serif;
     font-size: 32px;
     margin-left: 50px;
     font-weight: 500;
@@ -13,14 +41,17 @@
 }
 
 .main-text {
-    font-size: 46px;
-    font-weight: 500;
+    font-family: "Lucida Console", Monaco, monospace;
+    margin-left: 8px;
+    font-size: 50px;
+    font-weight: bold;
     text-align: center;
 }
 
 .header-text {
+    font-family: "Comic Sans MS", cursive, sans-serif;
     margin-left: 50px;
-    font-size: 54px;
+    font-size: 64px;
     font-weight: bold;
     text-align: center;
 }
@@ -29,14 +60,9 @@
     border: none !important;
 }
 
-.input-text {
+.input-bar {
     border: none transparent;
     width: 55px;
     height: 55px;
     outline: none;
-}
-
-.btn {
-    margin: 2% !important;
-    width: 29%;
 }

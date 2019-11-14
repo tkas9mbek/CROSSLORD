@@ -4,50 +4,92 @@ const path = require('path');
 const request = require("request");
 
 const app = express();
+
+require('express-async-await')(app);
+
 const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-function replaceWord(word, sentence) {
+function replaceWord(rank, word, sentence) {
 
-    let startAns = sentence.toUpperCase().indexOf( word.toUpperCase() );
+    let startAns = sentence.toUpperCase().indexOf( word.toUpperCase());
 
     if( startAns !== -1){
-        sentence = sentence.substr(0, startAns) + "___ " + sentence.substr(startAns + word.length, sentence.length)
+        sentence = sentence.substr(0, startAns) + "___ " + sentence.substr(startAns + word.length, sentence.length);
+        rank = rank - 75;
     } else {
-        startAns = sentence.toUpperCase().indexOf( word.toUpperCase().substr(0, word.length - 1) );
+        startAns = sentence.toUpperCase().indexOf(word.toUpperCase().substr(0, word.length - 1) );
         if( startAns !== -1){
-            sentence = sentence.substr(0, startAns) + "___ " + sentence.substr(startAns + word.length, sentence.length)
+            sentence = sentence.substr(0, startAns) + "___ " + sentence.substr(startAns + word.length, sentence.length);
+            rank = rank - 44;
         }
     }
 
-    return sentence;
+    return ({
+        rank: rank,
+        clue: sentence
+    });
 }
 
-function normalizeString(string, additional) {
-    for(let i = 0; i < string.length; i++){
-        string = string.replace('&apos;', "'")
+async function normalizeString(rank, given, definition, additional) {
+
+    definition = definition.substr(
+        definition.substr(0, 9).indexOf(".") === -1 ? 0 : definition.substr(0, 9).indexOf(".") + 1
+    );
+
+    definition = definition.substr(
+        definition.substr(0, 2).indexOf("(") === -1 ? 0 : definition.substr(0, 2).indexOf("(") + 1
+    );
+
+    if( definition.length > 125){
+        definition = definition.substr(
+            0,
+            definition.indexOf(" ", 125)
+        ) + " ...";
+    }
+
+    for(let i = 0; i < definition.length; i++){
+        definition = await definition.replace('&apos;', "'")
             .replace('&#39;', "'")
             .replace('&quot;', '"');
+
         additional.forEach( key => {
-            string = string.replace(key, "");
-        })
+            definition = definition.replace(key, "");
+        });
+
+        // cursing words replacer
+        if(definition.toUpperCase().includes("FUCK") || definition.toUpperCase().includes("DICK") ||
+            definition.toUpperCase().includes("COCK") || definition.toUpperCase().includes("PUSSY") ||
+            definition.toUpperCase().includes("NIGGA") || definition.toUpperCase().includes("PENIS") ||
+            definition.toUpperCase().includes("ASS") || definition.toUpperCase().includes("SEX") ||
+            definition.toUpperCase().includes("SHIT") || definition.toUpperCase().includes("PISS") ||
+            definition.toUpperCase().includes("NIGGER") || definition.toUpperCase().includes("BITCH") )
+        {
+            rank = rank - 125;
+            definition = definition.replace('cock', "rooster")
+                .replace('shit', 'crap')
+                .replace('nigga', 'dude')
+                .replace('nigger', 'dude')
+                .replace('bitch', 'girl')
+                .replace('pussy', 'kitten');
+        }
     }
-    console.log(string);
-    return string;
+
+    return replaceWord(rank, given, definition);
 }
 
 // API calls
-app.get('/api/vocabulary', (req, res) => {
+app.get('/api/vocabulary', function(req, res){
 
     const given = req.query.ans;
+    let rank = 225;
+
     // get html code of website
     request({
         uri: "https://www.vocabulary.com/dictionary/" + given,
-    }, function (error, response, body) {
-
-        let rank = 225;
+    }, async function (error, response, body) {
 
         let startTitle = body.indexOf("<h3 class=\"definition\">") + 120;
         let endTitle = body.indexOf("</h3>", startTitle);
@@ -57,40 +99,30 @@ app.get('/api/vocabulary', (req, res) => {
             endTitle
         );
 
-        if( startTitle === -1 || definition.length > 300) {
-            res.send({
-                ans: req.query.ans,
-                rank: -1,
-                clue: "Not found"
-            });
-
-            return;
+        if (startTitle === -1 || definition.length > 300 || definition.includes("/>")) {
+            return (
+                {
+                    rank: -1,
+                    clue: "Not found"
+                });
         }
 
-        definition = normalizeString(definition, ["  ", "\t", "\n", "\r"]);
-        const newDef = replaceWord(given, definition);
-
-        if( newDef !== definition){
-            rank = rank - 76;
-        }
-
-        res.send({
-            ans: req.query.ans,
-            rank: rank,
-            clue: newDef
-        });
+        res.send(
+            await normalizeString(rank, given, definition, ["  ", "\t", "\n", "\r"])
+        )
     });
 });
 
-app.get('/api/merriam', (req, res) => {
+app.get('/api/merriam', function(req, res){
 
     const given = req.query.ans;
+    let rank = 280;
+
     // get html code of website
     request({
         uri: "https://www.merriam-webster.com/dictionary/" + given,
-    }, function (error, response, body) {
+    }, async function (error, response, body) {
 
-        let rank = 225;
 
         let startTitle = body.indexOf("definition is -") + 16;
         let endTitle = body.indexOf(".", startTitle) > body.indexOf("\"", startTitle) ?
@@ -101,44 +133,30 @@ app.get('/api/merriam', (req, res) => {
             endTitle
         );
 
-        if( startTitle === -1 || definition.length > 300) {
-            res.send({
-                ans: req.query.ans,
-                rank: -1,
-                clue: "Not found"
-            });
-
-            return;
+        if( startTitle === -1 || definition.length > 300 || definition.includes("/>") || definition.includes(">")) {
+            res.send(
+                {
+                    rank: -1,
+                    clue: "Not found"
+                });
         }
 
-        if(definition.indexOf(",", 45) !== -1) {
-            definition = definition.substr(0, definition.indexOf(",", 45));
-        }
+        res.send(
+            await normalizeString(rank, given, definition, [])
+        );
 
-        definition = normalizeString(definition, []);
-        const newDef = replaceWord(given, definition);
-
-        if( newDef !== definition){
-            rank = rank - 76;
-        }
-
-        res.send({
-            ans: req.query.ans,
-            rank: rank,
-            clue: newDef
-        });
     });
 });
 
-app.get('/api/dictionary', (req, res) => {
+app.get('/api/dictionary', function(req, res){
 
     const given = req.query.ans;
+    let rank = 320;
+
     // get html code of website
     request({
         uri: "https://www.dictionary.com/browse/" + given,
-    }, function (error, response, body) {
-
-        let rank = 225;
+    }, async function (error, response, body) {
 
         let startTitle = body.indexOf("definition, ") + 12;
         let endTitle = body.indexOf(";", startTitle) > body.indexOf(":", startTitle) ?
@@ -152,80 +170,66 @@ app.get('/api/dictionary', (req, res) => {
             endTitle
         );
 
-        if( startTitle === -1 || definition.length > 300) {
-            res.send({
-                ans: req.query.ans,
-                rank: -1,
-                clue: "Not found"
-            });
-
-            return;
+        if( startTitle === -1 || definition.length > 300 || definition.includes("/>") || definition.includes(">")) {
+            res.send(
+                {
+                    rank: -1,
+                    clue: "Not found"
+                });
         }
 
-        if(definition.indexOf(",", 45) !== -1) {
-            definition = definition.substr(0, definition.indexOf(",", 45));
-        }
+        res.send(
+            await normalizeString(rank, given, definition, ["(def 1)"])
+        );
 
-        definition = normalizeString(definition, []);
-        const newDef = replaceWord(given, definition);
-
-        if( newDef !== definition){
-            rank = rank - 76;
-        }
-
-        res.send({
-            ans: req.query.ans,
-            rank: rank,
-            clue: newDef
-        });
-    });
+    })
 });
 
-app.get('/api/urban', (req, res) => {
+app.get('/api/urban', function(req, res){
 
     const given = req.query.ans;
-    // get html code of website
+    let rank = 350;
+
     request({
         uri: "https://www.urbandictionary.com/define.php?term=" + given,
-    }, function (error, response, body) {
+    }, async function (error, response, body) {
 
-        let rank = 300;
 
         let startTitle = body.indexOf("property=\"fb:app_id\"><meta content=\"") + 36;
-        let endTitle = body.indexOf(".", startTitle) > body.indexOf("\"", startTitle) ?
-            body.indexOf("\"", startTitle) : body.indexOf(".", startTitle);
+        let endTitle = body.indexOf(".", startTitle + 30) > body.indexOf("\"", startTitle) ?
+            body.indexOf("\"", startTitle) : body.indexOf(".", startTitle + 30);
 
         let title = body.substring(
             startTitle,
             endTitle
         );
 
-        if(title.indexOf(",", 45) !== -1) {
-            title = title.substr(0, title.indexOf(",", 45));
+        if(title.indexOf(",", 60) !== -1) {
+            title = title.substr(0, title.indexOf(",", 60));
         }
 
-        title = normalizeString(title, []);
-        const newTitle = replaceWord(given, title);
-
-        if(newTitle !== title){
-            rank = rank - 76;
+        if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes(">")) {
+            res.send(
+                {
+                    rank: -1,
+                    clue: "Not found"
+                });
         }
 
-        res.send({
-            ans: req.query.ans,
-            rank: rank,
-            clue: newTitle
-        });
+        res.send(
+            await normalizeString(rank, given, title, [])
+        );
     });
 });
 
-app.get('/api/youtube', (req, res) => {
+app.get('/api/youtube', function(req, res){
 
     const given = req.query.ans;
+
     // get html code of website
     request({
         uri: "https://www.youtube.com/results?search_query=" + given,
-    }, function (error, response, body) {
+    }, async function (error, response, body) {
 
         let startTitle = body.indexOf(" dir=\"ltr\">", body.indexOf(" dir=\"ltr\">") + 1000) + 10;
 
@@ -233,9 +237,6 @@ app.get('/api/youtube', (req, res) => {
             startTitle,
             body.indexOf("</a>", startTitle)
         );
-
-        title = normalizeString(title, ['.']);
-        title = replaceWord(given, title);
 
         if(title.indexOf("[", 10) !== -1) {
             title = title.substr(0, title.indexOf("[", 10));
@@ -250,11 +251,17 @@ app.get('/api/youtube', (req, res) => {
             body.indexOf("görüntüleme</li>")
         ).replace('.', '').replace('.', '').replace('.', '');
 
-        res.send({
-            ans: req.query.ans,
-            rank: Math.ceil(views / 1000000),
-            clue: title
-        });
+        if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes("<")) {
+            res.send(
+                {
+                    rank: -1,
+                    clue: "Not found"
+                });
+        }
+
+        res.send(
+            await normalizeString(Math.ceil(views / 1000000) + 90, given, title, ['.', '>'])
+        );
     });
 });
 
