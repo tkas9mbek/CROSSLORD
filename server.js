@@ -16,13 +16,19 @@ function replaceWord(rank, word, sentence) {
 
     let startAns = sentence.toUpperCase().indexOf( word.toUpperCase());
 
-    if( startAns !== -1){
-        sentence = sentence.substr(0, startAns) + "___ " + sentence.substr(startAns + word.length, sentence.length);
-        rank = rank - 75;
-    } else {
-        startAns = sentence.toUpperCase().indexOf(word.toUpperCase().substr(0, word.length - 1) );
-        if( startAns !== -1){
-            sentence = sentence.substr(0, startAns) + "___ " + sentence.substr(startAns + word.length, sentence.length);
+    if (startAns !== -1) {
+        if( ( startAns === 0 ||sentence.charAt(startAns - 1) === ' ' )
+            && (sentence.charAt(startAns + word.length) === ' ' || startAns + word.length >= sentence.length)) {
+            sentence = sentence.substr(0, startAns) + "___" + sentence.substr(startAns + word.length, sentence.length);
+            rank = rank - 75;
+        }
+    }
+
+    startAns = sentence.toUpperCase().indexOf(word.toUpperCase().substr(0, word.length - 1));
+    if (startAns !== -1) {
+        if( ( startAns === 0 || sentence.charAt(startAns - 1) === ' ' )
+            && (sentence.charAt(startAns + word.length) === ' ' || startAns + word.length >= sentence.length )) {
+            sentence = sentence.substr(0, startAns) + "___" + sentence.substr(startAns + word.length, sentence.length);
             rank = rank - 44;
         }
     }
@@ -36,32 +42,55 @@ function replaceWord(rank, word, sentence) {
 async function normalizeString(rank, given, definition, additional) {
 
     definition = definition.substr(
-        definition.substr(0, 2).indexOf("(") === -1 ? 0 : definition.indexOf(")") + 1
+        definition.substr(0, 7).indexOf("(") === -1 ? 0 : definition.indexOf(")") + 2
     );
 
-    definition = definition.substr(
-        definition.substr(0, 2).indexOf("2.") === -1 ? 0 : definition.indexOf("2.")
-    );
+    if(definition.indexOf("1.") !== -1 && definition.indexOf("2.") !== -1 ) {
+        definition = definition.substr(
+            definition.indexOf("1.") + 3,  definition.indexOf("2") - 4
+        );
+    }
 
-    definition = definition.substr(
-        definition.substr(0, 2).toLowerCase().indexOf("b.") === -1 ? 0 : definition.indexOf("b.")
-    );
+    if(definition.toLowerCase().indexOf("b.") !== -1 && definition.toLowerCase().indexOf("a.") !== -1 ) {
+        definition = definition.substr(
+            definition.indexOf("a.") + 3,  definition.indexOf("b.") - 4
+        );
+    }
 
     definition = definition.substr(
         0,
         definition.indexOf("(", 30) === -1 ? definition.length : definition.indexOf("(", 30)
     );
 
-    if( definition.length > 120){
-        definition = definition.substr(
-            0,
-            definition.indexOf(" ", 120)
-        ) + " ...";
+    if( definition.length > 150){
+        if( definition.indexOf(",", 115) !== -1 ) {
+            definition = definition.substr(
+                0,
+                definition.indexOf(",", 115)
+            );
+        } else if( definition.indexOf(" is", 115) !== -1 ) {
+            definition = definition.substr(
+                0,
+                definition.indexOf(" is", 115)
+            );
+        } else if( definition.indexOf(" and", 115) !== -1 ) {
+            definition = definition.substr(
+                0,
+                definition.indexOf(" and", 115)
+            );
+        } else {
+            definition = definition.substr(
+                0,
+                definition.indexOf(" ", 120)
+            ) + " ...";
+        }
     }
 
     for(let i = 0; i < definition.length; i++){
         definition = await definition.replace('&apos;', "'")
             .replace('&#39;', "'")
+            .replace('&lt;', "<")
+            .replace('&gt;', ">")
             .replace('&quot;', '"');
 
         additional.forEach( key => {
@@ -113,7 +142,7 @@ app.get('/api/merriam', function(req, res){
         }
 
         res.send(
-            await normalizeString(rank, given, definition, [])
+            await normalizeString(rank, given, definition, ['—'])
         );
 
     });
@@ -175,11 +204,7 @@ app.get('/api/urban', function(req, res){
             endTitle
         );
 
-        if(title.indexOf(",", 60) !== -1) {
-            title = title.substr(0, title.indexOf(",", 60));
-        }
-
-        if( startTitle === -1 || title.length > 250 || title.includes("/>") || title.includes(">")) {
+        if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes(">")) {
             res.send(
                 {
                     rank: -1,
