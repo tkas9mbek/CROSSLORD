@@ -36,17 +36,26 @@ function replaceWord(rank, word, sentence) {
 async function normalizeString(rank, given, definition, additional) {
 
     definition = definition.substr(
-        definition.substr(0, 9).indexOf(".") === -1 ? 0 : definition.substr(0, 9).indexOf(".") + 1
+        definition.substr(0, 2).indexOf("(") === -1 ? 0 : definition.indexOf(")") + 1
     );
 
     definition = definition.substr(
-        definition.substr(0, 2).indexOf("(") === -1 ? 0 : definition.substr(0, 2).indexOf("(") + 1
+        definition.substr(0, 2).indexOf("2.") === -1 ? 0 : definition.indexOf("2.")
     );
 
-    if( definition.length > 125){
+    definition = definition.substr(
+        definition.substr(0, 2).toLowerCase().indexOf("b.") === -1 ? 0 : definition.indexOf("b.")
+    );
+
+    definition = definition.substr(
+        0,
+        definition.indexOf("(", 30) === -1 ? definition.length : definition.indexOf("(", 30)
+    );
+
+    if( definition.length > 120){
         definition = definition.substr(
             0,
-            definition.indexOf(" ", 125)
+            definition.indexOf(" ", 120)
         ) + " ...";
     }
 
@@ -67,13 +76,7 @@ async function normalizeString(rank, given, definition, additional) {
             definition.toUpperCase().includes("SHIT") || definition.toUpperCase().includes("PISS") ||
             definition.toUpperCase().includes("NIGGER") || definition.toUpperCase().includes("BITCH") )
         {
-            rank = rank - 125;
-            definition = definition.replace('cock', "rooster")
-                .replace('shit', 'crap')
-                .replace('nigga', 'dude')
-                .replace('nigger', 'dude')
-                .replace('bitch', 'girl')
-                .replace('pussy', 'kitten');
+            rank = -1;
         }
     }
 
@@ -93,15 +96,15 @@ app.get('/api/merriam', function(req, res){
 
 
         let startTitle = body.indexOf("definition is -") + 16;
-        let endTitle = body.indexOf(".", startTitle) > body.indexOf("\"", startTitle) ?
-            body.indexOf("\"", startTitle) : body.indexOf(".", startTitle);
+        let endTitle = body.indexOf(".", startTitle + 40) > body.indexOf("\"", startTitle) ?
+            body.indexOf("\"", startTitlestartTitle + 40) : body.indexOf(".", startTitle);
 
         let definition = body.substring(
             startTitle,
             endTitle
         );
 
-        if( startTitle === -1 || definition.length > 300 || definition.includes("/>") || definition.includes(">")) {
+        if( startTitle === -1 || definition.length > 250 || definition.includes("/>") || definition.includes(">")) {
             res.send(
                 {
                     rank: -1,
@@ -130,15 +133,15 @@ app.get('/api/dictionary', function(req, res){
         let endTitle = body.indexOf(";", startTitle) > body.indexOf(":", startTitle) ?
             body.indexOf(":", startTitle) : body.indexOf(";", startTitle);
 
-        endTitle = body.indexOf(".", startTitle) > endTitle ?
-            endTitle : body.indexOf(".", startTitle);
+        endTitle = body.indexOf(".", startTitle + 30) > endTitle ?
+            endTitle : body.indexOf(".", startTitle + 30);
 
         let definition = body.substring(
             startTitle,
             endTitle
         );
 
-        if( startTitle === -1 || definition.length > 300 || definition.includes("/>") || definition.includes(">")) {
+        if( startTitle === -1 || definition.length > 250 || definition.includes("/>") || definition.includes(">")) {
             res.send(
                 {
                     rank: -1,
@@ -164,8 +167,8 @@ app.get('/api/urban', function(req, res){
 
 
         let startTitle = body.indexOf("property=\"fb:app_id\"><meta content=\"") + 36;
-        let endTitle = body.indexOf(".", startTitle + 30) > body.indexOf("\"", startTitle) ?
-            body.indexOf("\"", startTitle) : body.indexOf(".", startTitle + 30);
+        let endTitle = body.indexOf(".", startTitle + 40) > body.indexOf("\"", startTitle) ?
+            body.indexOf("\"", startTitle) : body.indexOf(".", startTitle + 40);
 
         let title = body.substring(
             startTitle,
@@ -176,7 +179,7 @@ app.get('/api/urban', function(req, res){
             title = title.substr(0, title.indexOf(",", 60));
         }
 
-        if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes(">")) {
+        if( startTitle === -1 || title.length > 250 || title.includes("/>") || title.includes(">")) {
             res.send(
                 {
                     rank: -1,
