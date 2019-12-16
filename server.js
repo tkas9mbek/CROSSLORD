@@ -97,7 +97,7 @@ app.get('/api/merriam', function(req, res){
 
         let startTitle = body.indexOf("definition is -") + 16;
         let endTitle = body.indexOf(".", startTitle + 40) > body.indexOf("\"", startTitle) ?
-            body.indexOf("\"", startTitlestartTitle + 40) : body.indexOf(".", startTitle);
+            body.indexOf("\"", startTitle + 40) : body.indexOf(".", startTitle);
 
         let definition = body.substring(
             startTitle,
