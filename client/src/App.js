@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import './App.css';
-import {Button, Dimmer, Grid, Icon, Image, Loader, Message, Segment, Table} from "semantic-ui-react";
+import {Grid, Icon, Message,Table} from "semantic-ui-react";
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -34,7 +34,7 @@ class App extends Component {
 
         let newMsg = this.state.message;
 
-        this.callApi('/api/service1?time')
+        this.callApi('/api/service1')
             .then(res => {
                 this.setState({
                     message: newMsg.splice(1, 1),
@@ -72,9 +72,7 @@ class App extends Component {
 
             })
             .catch(err => console.log(err));
-
     }
-
 
     normalizeString(string) {
         for(let i = 0; i < string.length; i++){

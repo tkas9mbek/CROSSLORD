@@ -81,38 +81,6 @@ async function normalizeString(rank, given, definition, additional) {
 }
 
 // API calls
-app.get('/api/vocabulary', function(req, res){
-
-    const given = req.query.ans;
-    let rank = 225;
-
-    // get html code of website
-    request({
-        uri: "https://www.vocabulary.com/dictionary/" + given,
-    }, async function (error, response, body) {
-
-        let startTitle = body.indexOf("<h3 class=\"definition\">") + 120;
-        let endTitle = body.indexOf("</h3>", startTitle);
-
-        let definition = body.substring(
-            startTitle,
-            endTitle
-        );
-
-        if (startTitle === -1 || definition.length > 300 || definition.includes("/>")) {
-            return (
-                {
-                    rank: -1,
-                    clue: "Not found"
-                });
-        }
-
-        res.send(
-            await normalizeString(rank, given, definition, ["  ", "\t", "\n", "\r"])
-        )
-    });
-});
-
 app.get('/api/merriam', function(req, res){
 
     const given = req.query.ans;
@@ -296,14 +264,15 @@ app.get('/api/service1', (req, res) => {
                 );
             }
             table[Math.floor(i / 5)][i % 5].index = i;
-            if (cell.includes("class=\"Cell-block--1oNaD\"")) {
+            if (cell.includes("class=\"Cell-block--1oNaD")) {
                 table[Math.floor(i / 5)][i % 5].no = '*';
                 table[Math.floor(i / 5)][i % 5].color = 'black';
             } else {
-                const c = cell.charAt(cell.indexOf('</text>') - 1);
+                const c = cell.charAt(cell.indexOf('</text>') + 7 );
+                console.log(cell + " \n");
+                console.log(c + " " + i + " \n");
                 if (c >= '0' && c <= '9') {
                     table[Math.floor(i / 5)][i % 5].no = c;
-                    table[Math.floor(i / 5)][i % 5].color = 'white';
                 }
             }
         }
@@ -319,6 +288,7 @@ app.get('/api/service1', (req, res) => {
             body.indexOf(">Across</h3>") + 1,
             body.indexOf(">Down</h3>")
         );
+
         let i = 0;
         while (acrossClues.indexOf("<span class=\"Clue-label--2IdMY\">", i) !== -1) {
             const no = acrossClues.charAt(acrossClues.indexOf("<span class=\"Clue-label--2IdMY\">", i) + 32);
