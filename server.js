@@ -169,8 +169,8 @@ app.get('/api/slang', function(req, res){
                 endTitle
             );
 
-            if(definition.indexOf(";") !== -1){
-                definition = definition.substring(0, definition.indexOf(";"));
+            if(definition.indexOf(";", 70) !== -1){
+                definition = definition.substring(0, definition.indexOf(";", 70));
             }
 
             if(definition.indexOf("\r") !== -1){
@@ -281,8 +281,8 @@ app.get('/api/wiki', function(req, res){
                 definition = definition.substring(0, definition.indexOf("."));
             }
 
-            if(definition.indexOf(":") !== -1){
-                definition = definition.substring(0, definition.indexOf(":"));
+            if(definition.indexOf(":", 50) !== -1){
+                definition = definition.substring(0, definition.indexOf(":"), 50);
             }
 
             if( startTitle === -1 || url.length > 250 || url.includes("/>") || url.includes(">")) {
