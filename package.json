@@ -13,7 +13,10 @@
     "express": "^4.16.4",
     "express-async-await": "^1.1.0",
     "request": "^2.88.0",
-    "webpack-stylish": "^0.1.8"
+    "webpack-stylish": "^0.1.8",
+    "@tensorflow-models/universal-sentence-encoder": "1.2.0",
+    "@tensorflow/tfjs": "1.2.9",
+    "@tensorflow/tfjs-vis": "1.2.0"
   },
   "devDependencies": {
     "concurrently": "^4.0.1"

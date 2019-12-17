@@ -5,41 +5,50 @@ const request = require("request");
 
 const app = express();
 
-require('express-async-await')(app);
-
 const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-function replaceWord(rank, word, sentence) {
+async function replaceWord( word, sentence) {
 
     let startAns = sentence.toUpperCase().indexOf( word.toUpperCase());
 
     if (startAns !== -1) {
         if( ( startAns === 0 ||sentence.charAt(startAns - 1) === ' ' )
-            && (sentence.charAt(startAns + word.length) === ' ' || startAns + word.length >= sentence.length)) {
+            && (sentence.charAt(startAns + word.length) === ' ' || sentence.charAt(startAns + word.length) === ','
+                || sentence.charAt(startAns + word.length) === ',' || startAns + word.length >= sentence.length)) {
             sentence = sentence.substr(0, startAns) + "___" + sentence.substr(startAns + word.length, sentence.length);
-            rank = rank - 75;
         }
     }
 
     startAns = sentence.toUpperCase().indexOf(word.toUpperCase().substr(0, word.length - 1));
     if (startAns !== -1) {
         if( ( startAns === 0 || sentence.charAt(startAns - 1) === ' ' )
-            && (sentence.charAt(startAns + word.length) === ' ' || startAns + word.length >= sentence.length )) {
+            &&  (sentence.charAt(startAns + word.length) === ' ' || sentence.charAt(startAns + word.length) === ','
+                || sentence.charAt(startAns + word.length) === ',' || startAns + word.length >= sentence.length)) {
             sentence = sentence.substr(0, startAns) + "___" + sentence.substr(startAns + word.length, sentence.length);
-            rank = rank - 44;
         }
     }
 
+    word = word.concat('s');
+    startAns = sentence.toUpperCase().indexOf(word.toUpperCase());
+    if (startAns !== -1) {
+        if( ( startAns === 0 ||sentence.charAt(startAns - 1) === ' ' )
+            && (sentence.charAt(startAns + word.length) === ' ' || sentence.charAt(startAns + word.length) === ','
+                || sentence.charAt(startAns + word.length) === ',' || startAns + word.length >= sentence.length)) {
+            sentence = sentence.substr(0, startAns) + "___" + sentence.substr(startAns + word.length, sentence.length);
+        }
+    }
+
+
+
     return ({
-        rank: rank,
         clue: sentence
     });
 }
 
-async function normalizeString(rank, given, definition, additional) {
+async function normalizeString( given, definition, additional) {
 
     definition = definition.substr(
         definition.substr(0, 7).indexOf("(") === -1 ? 0 : definition.indexOf(")") + 2
@@ -57,31 +66,49 @@ async function normalizeString(rank, given, definition, additional) {
         );
     }
 
+    if(definition.toLowerCase().indexOf("b)") !== -1 && definition.toLowerCase().indexOf("a)") !== -1 ) {
+        definition = definition.substr(
+            definition.indexOf("a)") + 3,  definition.indexOf("b)") - 4
+        );
+    }
+
+    definition = definition.substr(
+        definition.indexOf("1.") === -1 ? 0 : definition.indexOf("1.") + 3
+    );
+
+    definition = definition.substr(
+        definition.indexOf("a.") === -1 ? 0 : definition.indexOf("a.") + 3
+    );
+
+    definition = definition.substr(
+        definition.indexOf("a)") === -1 ? 0 : definition.indexOf("a)") + 3
+    );
+
     definition = definition.substr(
         0,
         definition.indexOf("(", 30) === -1 ? definition.length : definition.indexOf("(", 30)
     );
 
-    if( definition.length > 150){
-        if( definition.indexOf(",", 115) !== -1 ) {
+    if( definition.length > 135){
+        if( definition.indexOf(",", 80) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(",", 115)
+                definition.indexOf(",", 80)
             );
-        } else if( definition.indexOf(" is", 115) !== -1 ) {
+        } else if( definition.indexOf(" is", 110) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" is", 115)
+                definition.indexOf(" is", 100)
             );
-        } else if( definition.indexOf(" and", 115) !== -1 ) {
+        } else if( definition.indexOf(" and", 100) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" and", 115)
+                definition.indexOf(" and", 100)
             );
         } else {
             definition = definition.substr(
                 0,
-                definition.indexOf(" ", 120)
+                definition.indexOf(" ", 115)
             ) + " ...";
         }
     }
@@ -91,38 +118,88 @@ async function normalizeString(rank, given, definition, additional) {
             .replace('&#39;', "'")
             .replace('&lt;', "<")
             .replace('&gt;', ">")
+            .replace(':D', "")
+            .replace('\n', "")
             .replace('&quot;', '"');
 
         additional.forEach( key => {
             definition = definition.replace(key, "");
         });
-
-        // cursing words replacer
-        if(definition.toUpperCase().includes("FUCK") || definition.toUpperCase().includes("DICK") ||
-            definition.toUpperCase().includes("COCK") || definition.toUpperCase().includes("PUSSY") ||
-            definition.toUpperCase().includes("NIGGA") || definition.toUpperCase().includes("PENIS") ||
-            definition.toUpperCase().includes("ASS") || definition.toUpperCase().includes("SEX") ||
-            definition.toUpperCase().includes("SHIT") || definition.toUpperCase().includes("PISS") ||
-            definition.toUpperCase().includes("NIGGER") || definition.toUpperCase().includes("BITCH") )
-        {
-            rank = -1;
-        }
     }
 
-    return replaceWord(rank, given, definition);
+    return replaceWord(given, definition);
 }
 
 // API calls
+app.get('/api/slang', function(req, res){
+
+    const given = req.query.ans;
+
+    // get html code of website
+    request({
+        uri: "http://onlineslangdictionary.com/search/?q=" + given + "&sa=Search",
+    }, async function (error, response, body) {
+
+        let startTitle = body.indexOf("/meaning-definition-of/");
+        let endTitle = body.indexOf("\"", startTitle);
+
+        let url = "http://onlineslangdictionary.com" + body.substring(
+            startTitle,
+            endTitle
+        );
+
+        if( startTitle === -1 || url.length > 250 || url.includes("/>") || url.includes(">")) {
+            res.send(
+                {
+                    clue: "Not found"
+                });
+        }
+
+        console.log("url 0 " + url);
+
+        request({
+            uri: url,
+        }, async function (error, response, body) {
+
+            let startTitle = body.indexOf("<li>") + 4;
+            let endTitle = body.indexOf(".", startTitle);
+
+            let definition = body.substring(
+                startTitle,
+                endTitle
+            );
+
+            if(definition.indexOf(";") !== -1){
+                definition = definition.substring(0, definition.indexOf(";"));
+            }
+
+            if(definition.indexOf("\r") !== -1){
+                definition = definition.substring(0, definition.indexOf("\r"));
+            }
+
+            if( startTitle === -1 || url.length > 250 || url.includes("/>") || url.includes(">")) {
+                res.send(
+                    {
+                        clue: "Not found"
+                    });
+            }
+
+            res.send(
+                await normalizeString(given, definition, [])
+            );
+
+        });
+    });
+});
+
 app.get('/api/merriam', function(req, res){
 
     const given = req.query.ans;
-    let rank = 280;
 
     // get html code of website
     request({
         uri: "https://www.merriam-webster.com/dictionary/" + given,
     }, async function (error, response, body) {
-
 
         let startTitle = body.indexOf("definition is -") + 16;
         let endTitle = body.indexOf(".", startTitle + 40) > body.indexOf("\"", startTitle) ?
@@ -136,22 +213,96 @@ app.get('/api/merriam', function(req, res){
         if( startTitle === -1 || definition.length > 250 || definition.includes("/>") || definition.includes(">")) {
             res.send(
                 {
-                    rank: -1,
                     clue: "Not found"
                 });
         }
 
         res.send(
-            await normalizeString(rank, given, definition, ['—'])
+            await normalizeString(given, definition, ['—'])
         );
 
+    });
+});
+
+app.get('/api/wiki', function(req, res){
+
+    const given = req.query.ans;
+
+    // get html code of website
+    request({
+        uri: "https://www.google.com/search?sort=relevance&q=" + given + "&title=Special%3ASearch&profile=advanced&fulltext=1&searchengineselect=google&as_sitesearch=en.wiktionary.org&advancedSearch-current=%7B%7D&ns0=1",
+    }, async function (error, response, body) {
+
+        let startTitle = body.indexOf("https://en.wiktionary.org/wiki/");
+        let endTitle = body.indexOf("ping", startTitle) - 2;
+        endTitle = body.indexOf("&", startTitle) < endTitle ? body.indexOf("&", startTitle) : endTitle;
+        endTitle = body.indexOf("\"", startTitle) < endTitle ? body.indexOf("\"", startTitle) : endTitle;
+
+        let url = body.substring(
+            startTitle,
+            endTitle
+        );
+
+        if( startTitle === -1 || url.length > 250 || url.includes("/>") || url.includes(">")) {
+            res.send(
+                {
+                    clue: "Not found"
+                });
+        }
+
+        console.log("url 0 " + url);
+
+        request({
+            uri: url,
+        }, async function (error, response, body) {
+
+            let startTitle = body.indexOf("<span class=\"ib-brac\">)</span>") + 31;
+            let endTitle = body.indexOf("</span>", startTitle);
+
+            let definition = body.substring(
+                startTitle,
+                endTitle
+            );
+
+            let counter = 0;
+            while(definition.indexOf('<') !== -1 && definition.indexOf('>') !== -1) {
+                counter++;
+                definition = await definition.substr(0, definition.indexOf('<'))
+                    + definition.substr(definition.indexOf('>') + 1);
+                if(counter > 20) {
+                    res.send(
+                        {
+                            clue: "Not found"
+                        });
+                }
+            }
+
+            if(definition.indexOf(".") !== -1){
+                definition = definition.substring(0, definition.indexOf("."));
+            }
+
+            if(definition.indexOf(":") !== -1){
+                definition = definition.substring(0, definition.indexOf(":"));
+            }
+
+            if( startTitle === -1 || url.length > 250 || url.includes("/>") || url.includes(">")) {
+                res.send(
+                    {
+                        clue: "Not found"
+                    });
+            }
+
+            res.send(
+                await normalizeString(given, definition, [])
+            );
+
+        });
     });
 });
 
 app.get('/api/dictionary', function(req, res){
 
     const given = req.query.ans;
-    let rank = 320;
 
     // get html code of website
     request({
@@ -173,13 +324,12 @@ app.get('/api/dictionary', function(req, res){
         if( startTitle === -1 || definition.length > 250 || definition.includes("/>") || definition.includes(">")) {
             res.send(
                 {
-                    rank: -1,
                     clue: "Not found"
                 });
         }
 
         res.send(
-            await normalizeString(rank, given, definition, ["(def 1)"])
+            await normalizeString( given, definition, ["(def 1)"])
         );
 
     })
@@ -188,12 +338,10 @@ app.get('/api/dictionary', function(req, res){
 app.get('/api/urban', function(req, res){
 
     const given = req.query.ans;
-    let rank = 350;
 
     request({
         uri: "https://www.urbandictionary.com/define.php?term=" + given,
     }, async function (error, response, body) {
-
 
         let startTitle = body.indexOf("property=\"fb:app_id\"><meta content=\"") + 36;
         let endTitle = body.indexOf(".", startTitle + 40) > body.indexOf("\"", startTitle) ?
@@ -207,13 +355,12 @@ app.get('/api/urban', function(req, res){
         if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes(">")) {
             res.send(
                 {
-                    rank: -1,
                     clue: "Not found"
                 });
         }
 
         res.send(
-            await normalizeString(rank, given, title, [])
+            await normalizeString(given, title, [])
         );
     });
 });
@@ -242,21 +389,15 @@ app.get('/api/youtube', function(req, res){
             title = title.substr(0, title.indexOf("(", 15));
         }
 
-        const views = body.substring(
-            body.indexOf("önce</li><li>") + 13,
-            body.indexOf("görüntüleme</li>")
-        ).replace('.', '').replace('.', '').replace('.', '');
-
         if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes("<")) {
             res.send(
                 {
-                    rank: -1,
                     clue: "Not found"
                 });
         }
 
         res.send(
-            await normalizeString(Math.ceil(views / 1000000) + 90, given, title, ['.', '>'])
+            await normalizeString(given, title, ['.', '>'])
         );
     });
 });

@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 
 import './App.css';
 import {Grid, Icon, Message,Table} from "semantic-ui-react";
+import * as use from "@tensorflow-models/universal-sentence-encoder";
+import { trainModel, getOKChance } from "./clue-predictor-ai/model";
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -24,14 +26,14 @@ class App extends Component {
             across: [],
             down: []
         },
-        cluesSize: 7
+        cluesSize: 7,
+        possibleClues: {}
     };
 
     constructor(props) {
         super(props);
 
         let initialInputs = new Array(25).fill('');
-
         let newMsg = this.state.message;
 
         this.callApi('/api/service1')
@@ -179,13 +181,23 @@ class App extends Component {
             message: message
         });
 
-        this.generateClues(down, "downAns", message);
-        this.generateClues(across, "acrossAns", message);
+        this.setState({
+            message: [{
+                header: "Training clue-ranker model"
+            }]
+        });
+
+        const sentenceEncoder = await use.load();
+        const trainedModel = await trainModel(sentenceEncoder);
+
+        this.generateClues(down, "downAns", message, sentenceEncoder, trainedModel);
+        this.generateClues(across, "acrossAns", message, sentenceEncoder, trainedModel);
     }
 
-    generateClues(down, side, message) {
+    async generateClues(down, side, message, sentenceEncoder, trainedModel) {
 
         let newDownClues = [];
+        const possibleClues = this.state.possibleClues;
 
         for (let i = 0; i < down.length; i++) {
 
@@ -194,68 +206,138 @@ class App extends Component {
             let maxRank = -1;
             let newClue = element;
 
+            possibleClues[answer] = {};
+
             message.push({
                 header: "Generating new clue for : " + answer,
-                content: "Searching Youtube.com"
+                content: "Searching Searching Merriam-Webster's Learner's Dictionary"
             });
 
             this.setState({
                 message: message
             });
 
-            this.callApi('/api/youtube?ans=' + answer)
-                .then(res =>{
-                        if(res.rank > maxRank) {
-                            maxRank = res.rank;
+            await this.callApi('/api/merriam?ans=' + answer)
+                .then( async res => {
+                        const rank = await getOKChance(
+                            trainedModel,
+                            sentenceEncoder,
+                            res.clue
+                        );
+
+                        // /*********************
+                        possibleClues[answer].merriam = {clue: res.clue, rank: rank};
+                        // /*****************
+
+                        if(rank >= maxRank) {
+                            maxRank = rank;
                             newClue = element.substr(0, 3) + res.clue;
                         }
                         message[i].content = "Searching UrbanDictionary.com";
                         this.setState({
                             message: message
                         });
-                        this.callApi('/api/urban?ans=' + answer)
-                            .then(res =>{
-                                    if(res.rank > maxRank) {
-                                        maxRank = res.rank;
-                                        newClue = element.substr(0, 3) + res.clue;
-                                    }
-                                    message[i].content = "Searching Dictionary.com";
-                                    this.setState({
-                                        message: message
-                                    });
-                                    this.callApi('/api/dictionary?ans=' + answer)
-                                        .then(res =>{
-                                                if(res.rank > maxRank) {
-                                                    maxRank = res.rank;
-                                                    newClue = element.substr(0, 3) + res.clue;
-                                                }
-                                                message[i].content = "Searching Merriam-Webster's Learner's Dictionary";
-                                                this.setState({
-                                                    message: message
-                                                });
-                                                this.callApi('/api/merriam?ans=' + answer)
-                                                    .then(res =>{
-                                                            if(res.rank > maxRank) {
-                                                                maxRank = res.rank;
-                                                                newClue = element.substr(0, 3) + res.clue;
-                                                            }
-
-                                                            newDownClues[element.substr(0, 1)] =
-                                                                newClue.substr(0,4).toUpperCase() + newClue.substr(4);
-                                                            message.splice(0, 1);
-
-                                                            this.setState({
-                                                                [side]: newDownClues,
-                                                                message: message
-                                                            });
-                                                        }
-                                                    ).catch(err => console.log(err));
-                                            }
-                                        ).catch(err => console.log(err));
-                                }
-                            ).catch(err => console.log(err));
                     }
                 ).catch(err => console.log(err));
+
+            await this.callApi('/api/urban?ans=' + answer)
+                .then( async res => {
+                        const rank = await getOKChance(
+                            trainedModel,
+                            sentenceEncoder,
+                            res.clue
+                        );
+
+                        // /*********************
+                        possibleClues[answer].urban = {clue: res.clue, rank: rank};
+                        // /*****************
+
+                        if(rank >= maxRank) {
+                            maxRank = rank;
+                            newClue = element.substr(0, 3) + res.clue;
+                        }
+                        message[i].content = "Searching Dictionary.com";
+                        this.setState({
+                            message: message
+                        });
+                    }
+                ).catch(err => console.log(err));
+
+            await this.callApi('/api/dictionary?ans=' + answer)
+                .then( async res => {
+                        const rank = await getOKChance(
+                            trainedModel,
+                            sentenceEncoder,
+                            res.clue
+                        );
+
+                        // /*********************
+                        possibleClues[answer].dictionary = {clue: res.clue, rank: rank};
+                        // /*****************
+
+                        if(rank >= maxRank) {
+                            maxRank = rank;
+                            newClue = element.substr(0, 3) + res.clue;
+                        }
+                        message[i].content = "Searching The Online Slang Dictionary";
+                        this.setState({
+                            message: message
+                        });
+                    }
+                ).catch(err => console.log(err));
+
+            await this.callApi('/api/slang?ans=' + answer)
+                .then( async res => {
+                        const rank = await getOKChance(
+                            trainedModel,
+                            sentenceEncoder,
+                            res.clue
+                        );
+
+                        // /*********************
+                        possibleClues[answer].slang = {clue: res.clue, rank: rank};
+                        // /*****************
+
+                        if(rank >= maxRank) {
+                            maxRank = rank;
+                            newClue = element.substr(0, 3) + res.clue;
+                        }
+                        message[i].content = "Searching wiki dictionary";
+                        this.setState({
+                            message: message
+                        });
+                    }
+                ).catch(err => console.log(err));
+
+            await this.callApi('/api/wiki?ans=' + answer)
+                .then( async res => {
+                        const rank = await getOKChance(
+                            trainedModel,
+                            sentenceEncoder,
+                            res.clue
+                        );
+
+                        // /*********************
+                        possibleClues[answer].wiki = {clue: res.clue, rank: rank};
+                        // /*****************
+
+                        if(rank >= maxRank) {
+                            maxRank = rank;
+                            newClue = element.substr(0, 3) + res.clue;
+                        }
+                    }
+                ).catch(err => console.log(err));
+
+            // finalize
+            newDownClues[element.substr(0, 1)] =
+                newClue.substr(0,4).toUpperCase() + newClue.substr(4);
+            message.splice(0, 1);
+
+            this.setState({
+                [side]: newDownClues,
+                possibleClues: possibleClues,
+                message: message
+            });
         }
     }
 
@@ -372,9 +454,9 @@ class App extends Component {
 
                         <Table key='black' className="borderless">
 
-                            <Table.Header className="clue-header">
+                            <Table.Header>
                                 <Table.Row>
-                                    <Table.HeaderCell colSpan='3'>Across</Table.HeaderCell>
+                                    <Table.HeaderCell colSpan='3' className="clue-header">Across</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 
@@ -416,9 +498,9 @@ class App extends Component {
 
                         <Table key='black' className="borderless">
 
-                            <Table.Header className="clue-header">
+                            <Table.Header>
                                 <Table.Row>
-                                    <Table.HeaderCell colSpan='3'>Down</Table.HeaderCell>
+                                    <Table.HeaderCell colSpan='3' className="clue-header">Down</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 
@@ -437,9 +519,9 @@ class App extends Component {
 
                         <Table key='black' className="borderless">
 
-                            <Table.Header className="clue-header">
+                            <Table.Header >
                                 <Table.Row>
-                                    <Table.HeaderCell colSpan='3'>New Down Clues</Table.HeaderCell>
+                                    <Table.HeaderCell colSpan='3' className="clue-header">New Down Clues</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 
@@ -459,7 +541,6 @@ class App extends Component {
                     <Grid.Column width={1}/>
 
                 </Grid.Row>
-
             </Grid>
         );
     }

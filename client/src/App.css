@@ -20,16 +20,16 @@
 
 .clue-text {
     font-family: "Comic Sans MS", cursive, sans-serif;
-    line-height: 21px;
-    font-size: 15px;
-    color: #0d71bb;
+    line-height: 20px;
+    font-size: 16px;
     font-weight: 600;
 }
 
 .clue-header {
-    font-family: "Comic Sans MS", cursive, sans-serif;
-    font-size: 19px;
-    font-weight: 600;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0d71bb !important;
 }
 
 .date-text {
