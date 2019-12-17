@@ -477,7 +477,7 @@ class App extends Component {
 
                             <Table.Header className="clue-header">
                                 <Table.Row>
-                                    <Table.HeaderCell colSpan='3'>New Across Clues</Table.HeaderCell>
+                                    <Table.HeaderCell colSpan='3' className="clue-header">New Across Clues</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 
