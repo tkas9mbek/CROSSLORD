@@ -18,6 +18,7 @@ class App extends Component {
                 header: "Getting answers of the clues from https://nytimescrosswordanswers.com/",
             }
         ],
+        message2: [],
         table: [],
         downAns: [],
         acrossAns: [],
@@ -181,7 +182,7 @@ class App extends Component {
 
         this.setState({
             message: [{
-                header: "Training clue-ranker model"
+                header: "Loading clue-ranker model"
             }]
         });
 
@@ -189,13 +190,19 @@ class App extends Component {
         const trainedModel = await trainModel(sentenceEncoder);
 
         this.generateClues(down, "downAns", message, sentenceEncoder, trainedModel);
-        this.generateClues(across, "acrossAns", message, sentenceEncoder, trainedModel);
+        await this.generateClues(across, "acrossAns", message, sentenceEncoder, trainedModel);
+
+        setTimeout( this.setState({
+            message2: []
+        }), 10000);
+
     }
 
     async generateClues(down, side, message, sentenceEncoder, trainedModel) {
 
         let newDownClues = [];
         const possibleClues = this.state.possibleClues;
+        const message2 = this.state.message2;
 
         for (let i = 0; i < down.length; i++) {
 
@@ -203,6 +210,7 @@ class App extends Component {
             const answer = element.substr(3);
             let maxRank = -1;
             let newClue = element;
+            let posString = "";
 
             possibleClues[answer] = {};
 
@@ -232,6 +240,8 @@ class App extends Component {
                             newClue = element.substr(0, 3) + res.clue;
                         }
                         message[i].content = "Searching UrbanDictionary.com";
+                        posString = posString + rank + "%: (merriam) " + res.clue + ";   ";
+
                         this.setState({
                             message: message
                         });
@@ -255,6 +265,8 @@ class App extends Component {
                             newClue = element.substr(0, 3) + res.clue;
                         }
                         message[i].content = "Searching Dictionary.com";
+                        posString = posString + rank + "%: (urban) " + res.clue + ";   ";
+
                         this.setState({
                             message: message
                         });
@@ -278,6 +290,8 @@ class App extends Component {
                             newClue = element.substr(0, 3) + res.clue;
                         }
                         message[i].content = "Searching The Online Slang Dictionary";
+                        posString = posString + rank + "%: (dictionary) " + res.clue + ";   ";
+
                         this.setState({
                             message: message
                         });
@@ -301,6 +315,8 @@ class App extends Component {
                             newClue = element.substr(0, 3) + res.clue;
                         }
                         message[i].content = "Searching wiki dictionary";
+                        posString = posString + rank + "%: (slang) " + res.clue + ";   ";
+
                         this.setState({
                             message: message
                         });
@@ -318,6 +334,7 @@ class App extends Component {
                         // /*********************
                         possibleClues[answer].wiki = {clue: res.clue, rank: rank};
                         // /*****************
+                        posString = posString + rank + "%: (wiki) " + res.clue + ";  ";
 
                         if(rank >= maxRank) {
                             maxRank = rank;
@@ -329,14 +346,20 @@ class App extends Component {
             // finalize
             newDownClues[element.substr(0, 1)] =
                 newClue.substr(0,4).toUpperCase() + newClue.substr(4);
-            message.splice(0, 1);
 
-            console.log(possibleClues);
+            message.splice(0, 1);
+            message2.push({
+                header: "Probability to be OK clue for word \"" + answer + "\" predicted by AI:   ",
+                content: posString
+            });
+
+            console.log(possibleClues[answer]);
 
             this.setState({
                 [side]: newDownClues,
                 possibleClues: possibleClues,
-                message: message
+                message: message,
+                message2: message2
             });
         }
     }
@@ -374,7 +397,7 @@ class App extends Component {
 
     render() {
 
-        const {table, clues, inputs, date, message,  downAns, acrossAns} = this.state;
+        const {table, clues, inputs, date, message, message2,  downAns, acrossAns} = this.state;
 
         return (
             <Grid columns='equal'>
@@ -382,9 +405,20 @@ class App extends Component {
                 <Grid.Row style={{marginTop: 15, marginLeft:50, marginRight:50}}>
                     <Grid.Column>
                         {
-                            message.map( msg => (
+                        message.map( msg => (
+                            <Message icon info floating>
+                                <Icon name='circle notched' loading/>
+                                <Message.Content>
+                                    <Message.Header>{msg.header}</Message.Header>
+                                    {msg.content}
+                                </Message.Content>
+                            </Message>
+                        ))
+                    }
+                        {
+                            message2.map( msg => (
                                 <Message icon info floating>
-                                    <Icon name='circle notched' loading/>
+                                    <Icon name='caret square right outline'/>
                                     <Message.Content>
                                         <Message.Header>{msg.header}</Message.Header>
                                         {msg.content}

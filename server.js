@@ -42,7 +42,11 @@ async function replaceWord( word, sentence) {
         }
     }
 
-
+    if(sentence.includes("fuck") || sentence.includes("ass") || sentence.includes("buttocks")) {
+        return ({
+            clue: "Not Found"
+        });
+    }
 
     return ({
         clue: sentence
@@ -85,10 +89,10 @@ async function normalizeString( given, definition, additional) {
         definition.indexOf("a)") === -1 ? 0 : definition.indexOf("a)") + 3
     );
 
-    // while(definition.indexOf('(') !== -1 && definition.indexOf(')') !== -1) {
-    //     definition = await definition.substr(0, definition.indexOf('(') - 1)
-    //         + definition.substr(definition.indexOf(')') + 1);
-    // }
+    while(definition.indexOf('<') !== -1 && definition.indexOf('>') !== -1) {
+        definition = await definition.substr(0, definition.indexOf('<') )
+            + definition.substr(definition.indexOf('>') + 1);
+    }
 
     definition = definition.substr(
         0,
@@ -165,8 +169,6 @@ app.get('/api/slang', function(req, res){
                     clue: "Not found"
                 });
         }
-
-        console.log("url 0 " + url);
 
         request({
             uri: url,
@@ -274,8 +276,6 @@ app.get('/api/wiki', function(req, res){
                     clue: "Not found"
                 });
         }
-
-        console.log("url 0 " + url);
 
         request({
             uri: url,
@@ -404,8 +404,6 @@ app.get('/api/urban', function(req, res){
             startTitle,
             endTitle
         );
-
-        console.log(title);
 
         if( startTitle === -1 || title.length > MAX_LENGTH || title.includes("/>") || title.includes(">") || title === "harset=") {
             res.send(
