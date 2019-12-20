@@ -90,7 +90,12 @@ async function normalizeString( given, definition, additional) {
     );
 
     if( definition.length > 135){
-        if( definition.indexOf(",", 80) !== -1 ) {
+        if( definition.indexOf(":", 80) !== -1 ) {
+            definition = definition.substr(
+                0,
+                definition.indexOf(":", 80)
+            );
+        } else if( definition.indexOf(",", 80) !== -1 ) {
             definition = definition.substr(
                 0,
                 definition.indexOf(",", 80)
@@ -379,13 +384,18 @@ app.get('/api/urban', function(req, res){
         }
 
         let startTitle = body.indexOf("property=\"fb:app_id\"><meta content=\"") + 36;
-        let endTitle = body.indexOf(".", startTitle + 30) > body.indexOf(",", startTitle + 30) ?
-            body.indexOf(",", startTitle + 30) : body.indexOf(".", startTitle + 30);
+        let endTitle = body.indexOf(".", startTitle + 35) > body.indexOf(",", startTitle + 35) ?
+            body.indexOf(",", startTitle + 35) : body.indexOf(".", startTitle + 35);
+
+        endTitle = endTitle < body.indexOf("\"", startTitle) ?
+            endTitle : body.indexOf("\"", startTitle);
 
         let title = body.substring(
             startTitle,
             endTitle
         );
+
+        console.log(title);
 
         if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes(">") || title === "harset=") {
             res.send(
