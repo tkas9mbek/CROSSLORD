@@ -417,7 +417,6 @@ class App extends Component {
                                                             type="text"
                                                             className="input-bar main-text"
                                                             maxLength="1"
-                                                            autoCapitalize={true}
                                                             name={col.index}
                                                             placeholder={inputs[col.index]}
                                                             value={inputs[col.index]}
@@ -450,7 +449,7 @@ class App extends Component {
 
                     <Grid.Column width={4}>
 
-                        <Table key='black' className="borderless">
+                        <Table className="borderless">
 
                             <Table.Header>
                                 <Table.Row>
@@ -471,7 +470,7 @@ class App extends Component {
                             </Table.Body>
                         </Table>
 
-                        <Table key='black' className="borderless">
+                        <Table className="borderless">
 
                             <Table.Header className="clue-header">
                                 <Table.Row>
@@ -494,7 +493,7 @@ class App extends Component {
 
                     <Grid.Column width={4}>
 
-                        <Table key='black' className="borderless">
+                        <Table className="borderless">
 
                             <Table.Header>
                                 <Table.Row>
@@ -515,7 +514,7 @@ class App extends Component {
                             </Table.Body>
                         </Table>
 
-                        <Table key='black' className="borderless">
+                        <Table className="borderless">
 
                             <Table.Header >
                                 <Table.Row>

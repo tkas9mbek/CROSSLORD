@@ -6,6 +6,7 @@ const request = require("request");
 const app = express();
 
 const port = process.env.PORT || 5000;
+const MAX_LENGTH = 170;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
@@ -89,11 +90,11 @@ async function normalizeString( given, definition, additional) {
         definition.indexOf("(", 30) === -1 ? definition.length : definition.indexOf("(", 30)
     );
 
-    if( definition.length > 135){
-        if( definition.indexOf(":", 80) !== -1 ) {
+    if( definition.length > 70){
+        if( definition.indexOf(":", 65) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(":", 80)
+                definition.indexOf(":", 65)
             );
         } else if( definition.indexOf(",", 80) !== -1 ) {
             definition = definition.substr(
@@ -110,7 +111,7 @@ async function normalizeString( given, definition, additional) {
                 0,
                 definition.indexOf(" and", 100)
             );
-        } else {
+        } else if( definition.indexOf(" ", 115) !== -1 ) {
             definition = definition.substr(
                 0,
                 definition.indexOf(" ", 115)
@@ -153,7 +154,7 @@ app.get('/api/slang', function(req, res){
             endTitle
         );
 
-        if( startTitle === -1 || url.length > 250 || url.includes("/>") || url.includes(">")) {
+        if( startTitle === -1 || url.length > MAX_LENGTH || url.includes("/>") || url.includes(">")) {
             res.send(
                 {
                     clue: "Not found"
@@ -189,7 +190,7 @@ app.get('/api/slang', function(req, res){
                 definition = definition.substring(0, definition.indexOf("\r"));
             }
 
-            if( startTitle === -1 || url.length > 250 || url.includes("/>") || url.includes(">")) {
+            if( startTitle === -1 || url.length > MAX_LENGTH || url.includes("/>") || url.includes(">")) {
                 res.send(
                     {
                         clue: "Not found"
@@ -229,7 +230,7 @@ app.get('/api/merriam', function(req, res){
             endTitle
         );
 
-        if( startTitle === -1 || definition.length > 250 || definition.includes("/>") || definition.includes(">")) {
+        if( startTitle === -1 || definition.length > MAX_LENGTH || definition.includes("/>") || definition.includes(">")) {
             res.send(
                 {
                     clue: "Not found"
@@ -308,10 +309,14 @@ app.get('/api/wiki', function(req, res){
             }
 
             if(definition.indexOf(":", 50) !== -1){
-                definition = definition.substring(0, definition.indexOf(":"), 50);
+                definition = definition.substring(0, definition.indexOf(":", 50));
             }
 
-            if( startTitle === -1 || url.length > 250 || url.includes("/>") || url.includes(">")) {
+            if(definition.indexOf(",", 20) !== -1){
+                definition = definition.substring(0, definition.indexOf(",", 20));
+            }
+
+            if( startTitle === -1 || url.length > MAX_LENGTH || url.includes("/>") || url.includes(">")) {
                 res.send(
                     {
                         clue: "Not found"
@@ -354,7 +359,7 @@ app.get('/api/dictionary', function(req, res){
             endTitle
         );
 
-        if( startTitle === -1 || definition.length > 250 || definition.includes("/>") || definition.includes(">")) {
+        if( startTitle === -1 || definition.length > MAX_LENGTH || definition.includes("/>") || definition.includes(">")) {
             res.send(
                 {
                     clue: "Not found"
@@ -384,8 +389,8 @@ app.get('/api/urban', function(req, res){
         }
 
         let startTitle = body.indexOf("property=\"fb:app_id\"><meta content=\"") + 36;
-        let endTitle = body.indexOf(".", startTitle + 35) > body.indexOf(",", startTitle + 35) ?
-            body.indexOf(",", startTitle + 35) : body.indexOf(".", startTitle + 35);
+        let endTitle = body.indexOf(".", startTitle + 25) > body.indexOf(",", startTitle + 30) ?
+            body.indexOf(",", startTitle + 30) : body.indexOf(".", startTitle + 25);
 
         endTitle = endTitle < body.indexOf("\"", startTitle) ?
             endTitle : body.indexOf("\"", startTitle);
@@ -397,7 +402,7 @@ app.get('/api/urban', function(req, res){
 
         console.log(title);
 
-        if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes(">") || title === "harset=") {
+        if( startTitle === -1 || title.length > MAX_LENGTH || title.includes("/>") || title.includes(">") || title === "harset=") {
             res.send(
                 {
                     clue: "Not found"

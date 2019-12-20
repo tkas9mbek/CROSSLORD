@@ -280,10 +280,6 @@
     "rank": "OK"
   },
   {
-    "clue": "used to verbally describe someone",
-    "rank": "OK"
-  },
-  {
     "clue": "buttocks",
     "rank": "BAD"
   },
@@ -296,7 +292,7 @@
     "rank": "OK"
   },
   {
-    "clue": "funny, irritate, annoy",
+    "clue": "something very funny, irritate, annoy",
     "rank": "BAD"
   },
   {
@@ -312,15 +308,7 @@
     "rank": "OK"
   },
   {
-    "clue": "Human does on items or animals",
-    "rank": "OK"
-  },
-  {
     "clue": "metaphorical term to describe temper",
-    "rank": "OK"
-  },
-  {
-    "clue": "verbally describe something",
     "rank": "OK"
   },
   {
@@ -352,15 +340,19 @@
     "rank": "OK"
   },
   {
+    "clue": "building where people live",
+    "rank": "BAD"
+  },
+  {
+    "clue": "very funny",
+    "rank": "BAD"
+  },
+  {
     "clue": "Protagonist of Harper Lees To Kill a Mockingbird",
     "rank": "OK"
   },
   {
     "clue": "Like puppy videos",
-    "rank": "OK"
-  },
-  {
-    "clue": "Org. headquartered in the J. Edgar Hoover Building",
     "rank": "OK"
   },
   {
@@ -409,7 +401,7 @@
   },
   {
     "clue": "a place usually away from urban areas where tents or simple buildings",
-    "rank": "OK"
+    "rank": "BAD"
   },
   {
     "clue": "swallow, imbibe",
@@ -476,6 +468,10 @@
     "rank": "BAD"
   },
   {
+    "clue": "something humans do at time or animals",
+    "rank": "BAD"
+  },
+  {
     "clue": "Pronounced the same as the word \\\"way\\\"",
     "rank": "OK"
   },
@@ -532,7 +528,7 @@
     "rank": "OK"
   },
   {
-    "clue": "A once novel concept completely and utterly destroyed by Clear Channel, which owns every ___ station and only plays three shitty songs ...",
+    "clue": "A once novel concept completely and utterly destroyed by Clear Channel, which owns every ___ station and only plays three shitty songs",
     "rank": "OK"
   },
   {
@@ -580,7 +576,7 @@
     "rank": "OK"
   },
   {
-    "clue": "The kind of agency that would stare at you thru the computer cam and would blow up and bust down your house’s door and windows ...",
+    "clue": "The kind of agency that would stare at you thru the computer cam and would blow up and bust down your house’s door and windows",
     "rank": "OK"
   },
   {
@@ -637,7 +633,7 @@
   },
   {
     "clue": "a usually rectangular piece of stiff paper, thin pasteboard, or plastic for various uses, as to write information on or printed ...",
-    "rank": "OK"
+    "rank": "BAD"
   },
   {
     "clue": "to produce (a text, picture, etc",
