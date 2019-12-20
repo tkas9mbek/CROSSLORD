@@ -161,6 +161,13 @@ app.get('/api/slang', function(req, res){
             uri: url,
         }, async function (error, response, body) {
 
+            if(body === undefined) {
+                res.send(
+                    {
+                        clue: "Not found"
+                    });
+            }
+
             let startTitle = body.indexOf("<li>") + 4;
             let endTitle = body.indexOf(".", startTitle);
 
@@ -200,6 +207,13 @@ app.get('/api/merriam', function(req, res){
     request({
         uri: "https://www.merriam-webster.com/dictionary/" + given,
     }, async function (error, response, body) {
+
+        if(body === undefined) {
+            res.send(
+                {
+                    clue: "Not found"
+                });
+        }
 
         let startTitle = body.indexOf("definition is -") + 16;
         let endTitle = body.indexOf(".", startTitle + 40) > body.indexOf("\"", startTitle) ?
@@ -256,6 +270,13 @@ app.get('/api/wiki', function(req, res){
             uri: url,
         }, async function (error, response, body) {
 
+            if(body === undefined) {
+                res.send(
+                    {
+                        clue: "Not found"
+                    });
+            }
+
             let startTitle = body.indexOf("<span class=\"ib-brac\">)</span>") + 31;
             let endTitle = body.indexOf("</span>", startTitle);
 
@@ -309,6 +330,13 @@ app.get('/api/dictionary', function(req, res){
         uri: "https://www.dictionary.com/browse/" + given,
     }, async function (error, response, body) {
 
+        if(body === undefined) {
+            res.send(
+                {
+                    clue: "Not found"
+                });
+        }
+
         let startTitle = body.indexOf("definition, ") + 12;
         let endTitle = body.indexOf(";", startTitle) > body.indexOf(":", startTitle) ?
             body.indexOf(":", startTitle) : body.indexOf(";", startTitle);
@@ -343,16 +371,23 @@ app.get('/api/urban', function(req, res){
         uri: "https://www.urbandictionary.com/define.php?term=" + given,
     }, async function (error, response, body) {
 
+        if(body === undefined) {
+            res.send(
+                {
+                    clue: "Not found"
+                });
+        }
+
         let startTitle = body.indexOf("property=\"fb:app_id\"><meta content=\"") + 36;
-        let endTitle = body.indexOf(".", startTitle + 40) > body.indexOf("\"", startTitle) ?
-            body.indexOf("\"", startTitle) : body.indexOf(".", startTitle + 40);
+        let endTitle = body.indexOf(".", startTitle + 30) > body.indexOf(",", startTitle + 30) ?
+            body.indexOf(",", startTitle + 30) : body.indexOf(".", startTitle + 30);
 
         let title = body.substring(
             startTitle,
             endTitle
         );
 
-        if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes(">")) {
+        if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes(">") || title === "harset=") {
             res.send(
                 {
                     clue: "Not found"
@@ -361,43 +396,6 @@ app.get('/api/urban', function(req, res){
 
         res.send(
             await normalizeString(given, title, [])
-        );
-    });
-});
-
-app.get('/api/youtube', function(req, res){
-
-    const given = req.query.ans;
-
-    // get html code of website
-    request({
-        uri: "https://www.youtube.com/results?search_query=" + given,
-    }, async function (error, response, body) {
-
-        let startTitle = body.indexOf(" dir=\"ltr\">", body.indexOf(" dir=\"ltr\">") + 1000) + 10;
-
-        let title = body.substring(
-            startTitle,
-            body.indexOf("</a>", startTitle)
-        );
-
-        if(title.indexOf("[", 10) !== -1) {
-            title = title.substr(0, title.indexOf("[", 10));
-        }
-
-        if(title.indexOf("(", 15) !== -1) {
-            title = title.substr(0, title.indexOf("(", 15));
-        }
-
-        if( startTitle === -1 || title.length > 300 || title.includes("/>") || title.includes("<")) {
-            res.send(
-                {
-                    clue: "Not found"
-                });
-        }
-
-        res.send(
-            await normalizeString(given, title, ['.', '>'])
         );
     });
 });

@@ -176,8 +176,6 @@ class App extends Component {
 
         this.setState({
             inputs: tableAnswers,
-            downAns: down,
-            acrossAns: across,
             message: message
         });
 
