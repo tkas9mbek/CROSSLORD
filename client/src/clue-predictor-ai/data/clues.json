@@ -28,8 +28,8 @@
     "rank": "OK"
   },
   {
-    "clue": "Starring role",
-    "rank": "OK"
+    "clue": "tell or told us to do",
+    "rank": "BAD"
   },
   {
     "clue": "Big coal-mining state: Abbr.",
@@ -296,7 +296,7 @@
     "rank": "BAD"
   },
   {
-    "clue": "___ of president",
+    "clue": "house of president, representatives",
     "rank": "OK"
   },
   {
@@ -313,10 +313,6 @@
   },
   {
     "clue": "Houses for the tree",
-    "rank": "OK"
-  },
-  {
-    "clue": "Representatives",
     "rank": "OK"
   },
   {
@@ -348,7 +344,7 @@
     "rank": "OK"
   },
   {
-    "clue": "building where people live or serves as living",
+    "clue": "building where people live or serves as living quarters for families",
     "rank": "BAD"
   },
   {

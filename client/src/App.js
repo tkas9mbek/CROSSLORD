@@ -331,6 +331,8 @@ class App extends Component {
                 newClue.substr(0,4).toUpperCase() + newClue.substr(4);
             message.splice(0, 1);
 
+            console.log(possibleClues);
+
             this.setState({
                 [side]: newDownClues,
                 possibleClues: possibleClues,

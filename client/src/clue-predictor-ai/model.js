@@ -2,7 +2,7 @@ import * as tf from "@tensorflow/tfjs";
 
 const tranClues = require("./data/clues.json");
 
-const MODEL_NAME = "clue-ranker-model-v20";
+const MODEL_NAME = "clue-ranker-model-v22";
 const N_CLASSES = 2;
 
 const encodeData = async (encoder, clues) => {
@@ -47,7 +47,7 @@ const trainModel = async encoder => {
     batchSize: 32,
     validationSplit: 0.1,
     shuffle: true,
-    epochs: 125
+    epochs: 175
   });
 
   await model.save(`localstorage://${MODEL_NAME}`);
