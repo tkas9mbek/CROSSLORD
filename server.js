@@ -85,31 +85,36 @@ async function normalizeString( given, definition, additional) {
         definition.indexOf("a)") === -1 ? 0 : definition.indexOf("a)") + 3
     );
 
+    // while(definition.indexOf('(') !== -1 && definition.indexOf(')') !== -1) {
+    //     definition = await definition.substr(0, definition.indexOf('(') - 1)
+    //         + definition.substr(definition.indexOf(')') + 1);
+    // }
+
     definition = definition.substr(
         0,
         definition.indexOf("(", 30) === -1 ? definition.length : definition.indexOf("(", 30)
     );
 
-    if( definition.length > 70){
-        if( definition.indexOf(":", 65) !== -1 ) {
+    if( definition.length > 50){
+        if( definition.indexOf(":", 50) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(":", 65)
+                definition.indexOf(":", 50)
             );
-        } else if( definition.indexOf(",", 80) !== -1 ) {
+        } else if( definition.indexOf(",", 38) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(",", 80)
+                definition.indexOf(",", 38)
             );
-        } else if( definition.indexOf(" is", 110) !== -1 ) {
+        } else if( definition.indexOf(" is", 80) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" is", 100)
+                definition.indexOf(" is", 80)
             );
-        } else if( definition.indexOf(" and", 100) !== -1 ) {
+        } else if( definition.indexOf(" and", 80) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" and", 100)
+                definition.indexOf(" and", 80)
             );
         } else if( definition.indexOf(" ", 115) !== -1 ) {
             definition = definition.substr(
