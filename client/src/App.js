@@ -18,7 +18,6 @@ class App extends Component {
                 header: "Getting answers of the clues from https://nytimescrosswordanswers.com/",
             }
         ],
-        message2: [],
         table: [],
         downAns: [],
         acrossAns: [],
@@ -190,19 +189,13 @@ class App extends Component {
         const trainedModel = await trainModel(sentenceEncoder);
 
         this.generateClues(down, "downAns", message, sentenceEncoder, trainedModel);
-        await this.generateClues(across, "acrossAns", message, sentenceEncoder, trainedModel);
-
-        setTimeout( this.setState({
-            message2: []
-        }), 10000);
-
+        this.generateClues(across, "acrossAns", message, sentenceEncoder, trainedModel);
     }
 
     async generateClues(down, side, message, sentenceEncoder, trainedModel) {
 
         let newDownClues = [];
         const possibleClues = this.state.possibleClues;
-        const message2 = this.state.message2;
 
         for (let i = 0; i < down.length; i++) {
 
@@ -348,10 +341,6 @@ class App extends Component {
                 newClue.substr(0,4).toUpperCase() + newClue.substr(4);
 
             message.splice(0, 1);
-            message2.push({
-                header: "Probability to be OK clue for word \"" + answer + "\" predicted by AI:   ",
-                content: posString
-            });
 
             console.log(possibleClues[answer]);
 
@@ -359,7 +348,6 @@ class App extends Component {
                 [side]: newDownClues,
                 possibleClues: possibleClues,
                 message: message,
-                message2: message2
             });
         }
     }
@@ -397,7 +385,7 @@ class App extends Component {
 
     render() {
 
-        const {table, clues, inputs, date, message, message2,  downAns, acrossAns} = this.state;
+        const {table, clues, inputs, date, message,  downAns, acrossAns} = this.state;
 
         return (
             <Grid columns='equal'>
@@ -405,20 +393,9 @@ class App extends Component {
                 <Grid.Row style={{marginTop: 15, marginLeft:50, marginRight:50}}>
                     <Grid.Column>
                         {
-                        message.map( msg => (
-                            <Message icon info floating>
-                                <Icon name='circle notched' loading/>
-                                <Message.Content>
-                                    <Message.Header>{msg.header}</Message.Header>
-                                    {msg.content}
-                                </Message.Content>
-                            </Message>
-                        ))
-                    }
-                        {
-                            message2.map( msg => (
+                            message.map( msg => (
                                 <Message icon info floating>
-                                    <Icon name='caret square right outline'/>
+                                    <Icon name='circle notched' loading/>
                                     <Message.Content>
                                         <Message.Header>{msg.header}</Message.Header>
                                         {msg.content}

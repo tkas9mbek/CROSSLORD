@@ -6,7 +6,7 @@ const request = require("request");
 const app = express();
 
 const port = process.env.PORT || 5000;
-const MAX_LENGTH = 170;
+const MAX_LENGTH = 160;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
@@ -42,7 +42,11 @@ async function replaceWord( word, sentence) {
         }
     }
 
-    if(sentence.includes("fuck") || sentence.includes("ass") || sentence.includes("buttocks")) {
+    if(sentence.toLowerCase().includes("fuck") || sentence.toLowerCase().includes("ass") ||
+        sentence.toLowerCase().includes("bitch") || sentence.toLowerCase().includes("nigga") ||
+        sentence.toLowerCase().includes("sex") || sentence.toLowerCase().includes("pussy") ||
+        sentence.toLowerCase().includes("marijuana") || sentence.toLowerCase().includes("weed") ||
+        sentence.toLowerCase().includes("buttocks")) {
         return ({
             clue: "Not Found"
         });
@@ -77,6 +81,11 @@ async function normalizeString( given, definition, additional) {
         );
     }
 
+    while(definition.indexOf('<') !== -1 && definition.indexOf('>') !== -1) {
+        definition = await definition.substr(0, definition.indexOf('<') )
+            + definition.substr(definition.indexOf('>') + 1);
+    }
+
     definition = definition.substr(
         definition.indexOf("1.") === -1 ? 0 : definition.indexOf("1.") + 3
     );
@@ -89,14 +98,17 @@ async function normalizeString( given, definition, additional) {
         definition.indexOf("a)") === -1 ? 0 : definition.indexOf("a)") + 3
     );
 
-    while(definition.indexOf('<') !== -1 && definition.indexOf('>') !== -1) {
-        definition = await definition.substr(0, definition.indexOf('<') )
-            + definition.substr(definition.indexOf('>') + 1);
-    }
+    definition = definition.substr(
+        0,definition.indexOf(":") === -1 ? definition.length : definition.indexOf(":")
+    );
+
+    definition = definition.substr(
+        0,definition.indexOf(";") === -1 ? definition.length : definition.indexOf(";")
+    );
 
     definition = definition.substr(
         0,
-        definition.indexOf("(", 30) === -1 ? definition.length : definition.indexOf("(", 30)
+        definition.indexOf("(", 25) === -1 ? definition.length : definition.indexOf("(", 30)
     );
 
     if( definition.length > 50){
@@ -110,20 +122,20 @@ async function normalizeString( given, definition, additional) {
                 0,
                 definition.indexOf(",", 38)
             );
-        } else if( definition.indexOf(" is", 80) !== -1 ) {
+        } else if( definition.indexOf(" is", 60) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" is", 80)
+                definition.indexOf(" is", 60)
             );
-        } else if( definition.indexOf(" and", 80) !== -1 ) {
+        } else if( definition.indexOf(" and", 60) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" and", 80)
+                definition.indexOf(" and", 60)
             );
-        } else if( definition.indexOf(" ", 115) !== -1 ) {
+        } else if( definition.indexOf(" ", 90) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" ", 115)
+                definition.indexOf(" ", 90)
             ) + " ...";
         }
     }

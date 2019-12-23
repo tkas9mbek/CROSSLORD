@@ -204,6 +204,14 @@
     "rank": "OK"
   },
   {
+    "clue": "Four cards in a normal deck with the value",
+    "rank": "BAD"
+  },
+  {
+    "clue": "a number that is",
+    "rank": "OK"
+  },
+  {
     "clue": "A way of relating to the world in which a person consistently overreacts to or greatly exaggerates the importance of benign ...",
     "rank": "BAD"
   },

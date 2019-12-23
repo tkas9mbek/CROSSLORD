@@ -2,7 +2,7 @@ import * as tf from "@tensorflow/tfjs";
 
 const tranClues = require("./data/clues.json");
 
-const MODEL_NAME = "clue-ranker-model-v22";
+const MODEL_NAME = "clue-ranker-model-v24";
 const N_CLASSES = 2;
 
 const encodeData = async (encoder, clues) => {
