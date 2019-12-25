@@ -37,7 +37,8 @@ class App extends Component {
         let newMsg = this.state.message;
 
         this.callApi('/api/service1')
-            .then(res => {
+            .then( (res) => {
+
                 this.setState({
                     message: newMsg.splice(1, 1),
                     table: res.table,
@@ -47,9 +48,9 @@ class App extends Component {
                 });
 
                 this.callApi('/api/service2?time=5000')
-                    .then(res =>{
+                    .then( (res) =>{
 
-                            if(res.answers.length < this.state.cluesSize){
+                        if(res.answers.length < this.state.cluesSize){
 
                                 newMsg[1].content = "No result returned in 5 seconds. Resending request with 18 seconds time-limit.";
 
@@ -78,7 +79,7 @@ class App extends Component {
 
     normalizeString(string) {
         for(let i = 0; i < string.length; i++){
-            string = string.replace('"', '').replace(',', '').replace("'", '');
+            string = string.replace('\"', '').replace(',', '').replace('the ', '').replace("'", '');
         }
         return string;
     }
@@ -90,7 +91,7 @@ class App extends Component {
         if (answers.length < this.state.cluesSize) {
 
             message[1].content = "No result returned in 15 seconds. Please check internet connection and" +
-                " whether https://nytimescrosswordanswers.com/ is working!"
+                " whether https://nytimescrosswordanswers.com/ is working!";
 
             this.setState({
                 message: message
@@ -107,12 +108,16 @@ class App extends Component {
         let downKeys = Object.keys(clues.down);
 
         for (let i = 0; i < acrossKeys.length; i++) {
-            across.push(acrossKeys[i], this.normalizeString(clues.across[acrossKeys[i]]));
+            await across.push(acrossKeys[i], this.normalizeString(clues.across[acrossKeys[i]]));
         }
 
         for (let i = 0; i < downKeys.length; i++) {
-            down.push(downKeys[i], this.normalizeString(clues.down[downKeys[i]]));
+            await down.push(downKeys[i], this.normalizeString(clues.down[downKeys[i]]));
         }
+
+        console.log(clues.down);
+        console.log(down);
+        console.log(answers);
 
         for (let i = 0; i < answers.length; i++) {
             if (down.includes(answers[i].clue)) {
@@ -487,7 +492,7 @@ class App extends Component {
 
                             <Table.Header className="clue-header">
                                 <Table.Row>
-                                    <Table.HeaderCell colSpan='3' className="clue-header">New Across Clues</Table.HeaderCell>
+                                    <Table.HeaderCell colSpan='3' className="clue-header">New Across</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 
@@ -531,7 +536,7 @@ class App extends Component {
 
                             <Table.Header >
                                 <Table.Row>
-                                    <Table.HeaderCell colSpan='3' className="clue-header">New Down Clues</Table.HeaderCell>
+                                    <Table.HeaderCell colSpan='3' className="clue-header">New Down</Table.HeaderCell>
                                 </Table.Row>
                             </Table.Header>
 

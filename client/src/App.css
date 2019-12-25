@@ -8,14 +8,14 @@
 }
 
 .square-table {
-    width: 525px !important;
+    width: 540px !important;
     height: 525px!important;
     margin-left: 8% !important;
     border: 2px solid #0d71bb !important;
 }
 
 .inner-cell {
-    border: 1px solid #0d71bb !important;
+    border: 1.5px solid #0d71bb !important;
 }
 
 .clue-text {

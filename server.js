@@ -59,6 +59,21 @@ async function replaceWord( word, sentence) {
 
 async function normalizeString( given, definition, additional) {
 
+    for(let i = 0; i < definition.length; i++){
+        definition = await definition.replace('&apos;', "'")
+            .replace('&#39;', "'")
+            .replace('&lt;', "<")
+            .replace('&gt;', ">")
+            .replace('&apos;', "'")
+            .replace(':D', "")
+            .replace('\n', "")
+            .replace('&quot;', '"');
+
+        additional.forEach( key => {
+            definition = definition.replace(key, "");
+        });
+    }
+
     definition = definition.substr(
         definition.substr(0, 7).indexOf("(") === -1 ? 0 : definition.indexOf(")") + 2
     );
@@ -99,11 +114,15 @@ async function normalizeString( given, definition, additional) {
     );
 
     definition = definition.substr(
-        0,definition.indexOf(":") === -1 ? definition.length : definition.indexOf(":")
+        0,definition.indexOf(":", 12) === -1 ? definition.length : definition.indexOf(":", 18)
     );
 
     definition = definition.substr(
-        0,definition.indexOf(";") === -1 ? definition.length : definition.indexOf(";")
+        0,definition.indexOf(";", 12) === -1 ? definition.length : definition.indexOf(";", 18)
+    );
+
+    definition = definition.substr(
+        0,definition.indexOf(".", 18) === -1 ? definition.length : definition.indexOf(".",18)
     );
 
     definition = definition.substr(
@@ -111,47 +130,38 @@ async function normalizeString( given, definition, additional) {
         definition.indexOf("(", 25) === -1 ? definition.length : definition.indexOf("(", 30)
     );
 
-    if( definition.length > 50){
-        if( definition.indexOf(":", 50) !== -1 ) {
+    if( definition.length > 45){
+         if( definition.indexOf(",", 35) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(":", 50)
+                definition.indexOf(",", 35)
             );
-        } else if( definition.indexOf(",", 38) !== -1 ) {
+        } else if( definition.indexOf(" is", 40) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(",", 38)
+                definition.indexOf(" is", 40)
             );
-        } else if( definition.indexOf(" is", 60) !== -1 ) {
+        } else if( definition.indexOf(" and", 40) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" is", 60)
+                definition.indexOf(" and", 40)
             );
-        } else if( definition.indexOf(" and", 60) !== -1 ) {
-            definition = definition.substr(
-                0,
-                definition.indexOf(" and", 60)
-            );
-        } else if( definition.indexOf(" ", 90) !== -1 ) {
+        } else if( definition.indexOf(" in", 40) !== -1 ) {
+             definition = definition.substr(
+                 0,
+                 definition.indexOf(" in", 40)
+             );
+         } else if( definition.indexOf(" from", 40) !== -1 ) {
+             definition = definition.substr(
+                 0,
+                 definition.indexOf(" from", 40)
+             );
+         }  else if( definition.indexOf(" ", 80) !== -1 ) {
             definition = definition.substr(
                 0,
                 definition.indexOf(" ", 90)
             ) + " ...";
         }
-    }
-
-    for(let i = 0; i < definition.length; i++){
-        definition = await definition.replace('&apos;', "'")
-            .replace('&#39;', "'")
-            .replace('&lt;', "<")
-            .replace('&gt;', ">")
-            .replace(':D', "")
-            .replace('\n', "")
-            .replace('&quot;', '"');
-
-        additional.forEach( key => {
-            definition = definition.replace(key, "");
-        });
     }
 
     return replaceWord(given, definition);
@@ -266,6 +276,14 @@ app.get('/api/merriam', function(req, res){
 app.get('/api/wiki', function(req, res){
 
     const given = req.query.ans;
+
+    // console.log(given);
+    //
+    // if(given.toLowerCase() === "sarah") {
+    //     res.send({
+    //         clue: "The wife of Abraham and mother of Isaac in the Bible"
+    //     });
+    // }
 
     // get html code of website
     request({

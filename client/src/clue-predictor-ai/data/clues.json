@@ -112,6 +112,14 @@
     "rank": "OK"
   },
   {
+    "clue": "female given name",
+    "rank": "OK"
+  },
+  {
+    "clue": "to suck",
+    "rank": "BAD"
+  },
+  {
     "clue": "of, relating to, or consisting of a web",
     "rank": "BAD"
   },
@@ -137,6 +145,14 @@
   },
   {
     "clue": "something sad, annoying, funny",
+    "rank": "BAD"
+  },
+  {
+    "clue": "falls on you, gulp alcohol",
+    "rank": "BAD"
+  },
+  {
+    "clue": "Puffy growth of hair",
     "rank": "BAD"
   },
   {
@@ -180,7 +196,7 @@
     "rank": "OK"
   },
   {
-    "clue": "She is the most beautiful girl you'll know, she's really funny and down to earth",
+    "clue": "She is the most beautiful girl you'll knowF",
     "rank": "BAD"
   },
   {
@@ -196,12 +212,12 @@
     "rank": "OK"
   },
   {
-    "clue": "The Backbone of a musical group or band. ___ ers keep the tempo of a group because in most other cases guitarists simply ...",
+    "clue": "She is the most beautiful girl you",
     "rank": "BAD"
   },
   {
     "clue": "A frequent member of the ___ 9000 community",
-    "rank": "OK"
+    "rank": "BAD"
   },
   {
     "clue": "Four cards in a normal deck with the value",
@@ -217,10 +233,6 @@
   },
   {
     "clue": "Not found",
-    "rank": "BAD"
-  },
-  {
-    "clue": "a female given name, form of ___ ndra",
     "rank": "BAD"
   },
   {
