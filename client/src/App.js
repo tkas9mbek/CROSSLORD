@@ -30,6 +30,16 @@ class App extends Component {
         possibleClues: {}
     };
 
+
+    componentDidMount() {
+        const today = new Date();
+        const todayDate = months[today.getMonth()] + " " + today.getDate() + ", " + today.getFullYear();
+
+        this.setState({
+            date: todayDate
+        })
+    }
+
     constructor(props) {
         super(props);
 
@@ -38,7 +48,6 @@ class App extends Component {
 
         this.callApi('/api/service1')
             .then( (res) => {
-
                 this.setState({
                     message: newMsg.splice(1, 1),
                     table: res.table,
@@ -49,7 +58,6 @@ class App extends Component {
 
                 this.callApi('/api/service2?time=5000')
                     .then( (res) =>{
-
                         if(res.answers.length < this.state.cluesSize){
 
                                 newMsg[1].content = "No result returned in 5 seconds. Resending request with 18 seconds time-limit.";
@@ -79,7 +87,7 @@ class App extends Component {
 
     normalizeString(string) {
         for(let i = 0; i < string.length; i++){
-            string = string.replace('\"', '').replace(',', '').replace('the ', '').replace("'", '');
+            string = string.replace('\"', '').replace(',', '').replace("'", '');
         }
         return string;
     }
@@ -355,15 +363,6 @@ class App extends Component {
                 message: message,
             });
         }
-    }
-
-    componentDidMount() {
-        const today = new Date();
-        const todayDate = months[today.getMonth()] + " " + today.getDate() + ", " + today.getFullYear();
-
-        this.setState({
-            date: todayDate
-        })
     }
 
     handleInputChange = (e) => {

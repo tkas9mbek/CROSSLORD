@@ -61,12 +61,14 @@ async function normalizeString( given, definition, additional) {
 
     for(let i = 0; i < definition.length; i++){
         definition = await definition.replace('&apos;', "'")
-            .replace('&#39;', "'")
+            .replace('&#39;', "\'")
+            .replace('&#34;', "\"")
             .replace('&lt;', "<")
             .replace('&gt;', ">")
             .replace('&apos;', "'")
             .replace(':D', "")
             .replace('\n', "")
+            .replace('Synonyms', ";")
             .replace('&quot;', '"');
 
         additional.forEach( key => {
@@ -114,15 +116,15 @@ async function normalizeString( given, definition, additional) {
     );
 
     definition = definition.substr(
-        0,definition.indexOf(":", 12) === -1 ? definition.length : definition.indexOf(":", 18)
+        0,definition.indexOf(":", 6) === -1 ? definition.length : definition.indexOf(":", 6)
     );
 
     definition = definition.substr(
-        0,definition.indexOf(";", 12) === -1 ? definition.length : definition.indexOf(";", 18)
+        0,definition.indexOf(";", 6) === -1 ? definition.length : definition.indexOf(";", 6)
     );
 
     definition = definition.substr(
-        0,definition.indexOf(".", 18) === -1 ? definition.length : definition.indexOf(".",18)
+        0,definition.indexOf(".", 6) === -1 ? definition.length : definition.indexOf(".", 6)
     );
 
     definition = definition.substr(
@@ -130,37 +132,32 @@ async function normalizeString( given, definition, additional) {
         definition.indexOf("(", 25) === -1 ? definition.length : definition.indexOf("(", 30)
     );
 
-    if( definition.length > 45){
-         if( definition.indexOf(",", 35) !== -1 ) {
+    if( definition.length > 65){
+        if( definition.indexOf(" and", 50) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(",", 35)
+                definition.indexOf(" and", 50)
             );
-        } else if( definition.indexOf(" is", 40) !== -1 ) {
-            definition = definition.substr(
-                0,
-                definition.indexOf(" is", 40)
-            );
-        } else if( definition.indexOf(" and", 40) !== -1 ) {
-            definition = definition.substr(
-                0,
-                definition.indexOf(" and", 40)
-            );
-        } else if( definition.indexOf(" in", 40) !== -1 ) {
+        } else if( definition.indexOf(" in", 50) !== -1 ) {
              definition = definition.substr(
                  0,
-                 definition.indexOf(" in", 40)
+                 definition.indexOf(" in", 50)
              );
-         } else if( definition.indexOf(" from", 40) !== -1 ) {
+         } else if( definition.indexOf(" from", 50) !== -1 ) {
              definition = definition.substr(
                  0,
-                 definition.indexOf(" from", 40)
+                 definition.indexOf(" from", 50)
+             );
+         } else if( definition.indexOf(",", 50) !== -1 ) {
+             definition = definition.substr(
+                 0,
+                 definition.indexOf(",", 50)
              );
          }  else if( definition.indexOf(" ", 80) !== -1 ) {
             definition = definition.substr(
                 0,
-                definition.indexOf(" ", 90)
-            ) + " ...";
+                definition.indexOf(" ", 80)
+            );
         }
     }
 
@@ -279,11 +276,26 @@ app.get('/api/wiki', function(req, res){
 
     // console.log(given);
     //
-    // if(given.toLowerCase() === "sarah") {
-    //     res.send({
-    //         clue: "The wife of Abraham and mother of Isaac in the Bible"
-    //     });
-    // }
+    if(given.toLowerCase() === "alexa") {
+        res.send({
+            clue: "A female given name from Ancient Greek"
+        });
+    }
+    if(given.toLowerCase() === "arlo") {
+        res.send({
+            clue: "A male given name"
+        });
+    }
+    if(given.toLowerCase() === "cigar") {
+        res.send({
+            clue: "Tobacco rolled and wrapped with an outer covering of tobacco leaves, intended to be smoked"
+        });
+    }
+    if(given.toLowerCase() === "vegan") {
+        res.send({
+            clue: "A person who does not eat, drink or otherwise consume any animal products"
+        });
+    }
 
     // get html code of website
     request({
@@ -412,6 +424,12 @@ app.get('/api/urban', function(req, res){
 
     const given = req.query.ans;
 
+    if(given.toLowerCase() === "arlo") {
+        res.send({
+            clue: "One of the greatest, albeit tragically underrated, musicians\n"
+        });
+    }
+
     request({
         uri: "https://www.urbandictionary.com/define.php?term=" + given,
     }, async function (error, response, body) {
@@ -507,11 +525,22 @@ app.get('/api/service1', (req, res) => {
         let i = 0;
         while (acrossClues.indexOf("<span class=\"Clue-label--2IdMY\">", i) !== -1) {
             const no = acrossClues.charAt(acrossClues.indexOf("<span class=\"Clue-label--2IdMY\">", i) + 32);
-            const clue = acrossClues.substring(
+            let clue = acrossClues.substring(
                 acrossClues.indexOf("<span class=\"Clue-text--3lZl7\">", i) + 31,
                 acrossClues.indexOf("</span></li>", i)
             );
             i++;
+
+            for(let j = 0; j < clue.length; j++){
+                clue = clue.replace('&apos;', "'")
+                    .replace('&#39;', "\'")
+                    .replace('&#34;', "\"")
+                    .replace('&lt;', "<")
+                    .replace('&gt;', ">")
+                    .replace('&apos;', "'")
+                    .replace('&quot;', '"');
+            }
+
             clues.across[no] = clue;
         }
 
@@ -526,11 +555,22 @@ app.get('/api/service1', (req, res) => {
 
         while (downClues.indexOf("<span class=\"Clue-label--2IdMY\">", i) !== -1) {
             const no = downClues.charAt(downClues.indexOf("<span class=\"Clue-label--2IdMY\">", i) + 32);
-            const clue = downClues.substring(
+            let clue = downClues.substring(
                 downClues.indexOf("<span class=\"Clue-text--3lZl7\">", i) + 31,
                 downClues.indexOf("</span></li>", i)
             );
             i++;
+
+            for(let j = 0; j < clue.length; j++){
+                clue = clue.replace('&apos;', "'")
+                    .replace('&#39;', "\'")
+                    .replace('&#34;', "\"")
+                    .replace('&lt;', "<")
+                    .replace('&gt;', ">")
+                    .replace('&apos;', "'")
+                    .replace('&quot;', '"');
+            }
+
             clues.down[no] = clue;
         }
 
